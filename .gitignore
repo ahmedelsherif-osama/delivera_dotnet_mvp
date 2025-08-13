@@ -1,0 +1,31 @@
+# Build / publish outputs
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+
+# Logs
+*.log
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Secrets & local configs
+appsettings.*.local.json
+appsettings.Development.json
+*.db
+*.bak
+*.mdf
+*.ldf
+
+# Dotnet User Secrets
+secrets.json
