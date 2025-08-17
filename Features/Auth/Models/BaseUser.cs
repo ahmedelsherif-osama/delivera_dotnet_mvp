@@ -16,5 +16,11 @@ namespace Delivera.Models
         public GlobalRole GlobalRole { get; set; } = !null;
         public OrganizationRole? OrganizationRole { get; set; }
 
+        public Guid? CreatedById { get; set; }
+        public BaseUser? CreatedByUser { get; set; }
+
+        public Guid? OrganizationId { get; set; }
+        public Organization? Organization { get; set; }
+
     }
 }
