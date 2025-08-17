@@ -13,5 +13,8 @@ namespace Delivera.Models
         public string NationalId { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public GlobalRole GlobalRole { get; set; } = !null;
+        public OrganizationRole? OrganizationRole { get; set; }
+
     }
 }
