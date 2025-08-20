@@ -5,7 +5,7 @@ namespace Delivera.Models
         public OrgAdmin()
         {
             GlobalRole = GlobalRole.SuperAdmin;
-            OrganizationRole = OrganizationRole.OrgAdmin;
+            OrganizationRole = OrganizationRole.Admin;
 
         }
     }

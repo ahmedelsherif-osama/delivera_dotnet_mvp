@@ -3,7 +3,7 @@ namespace Delivera.Models
     public enum OrganizationRole
     {
         Owner,
-        OrgAdmin,
+        Admin,
         Support,
         Rider
     }

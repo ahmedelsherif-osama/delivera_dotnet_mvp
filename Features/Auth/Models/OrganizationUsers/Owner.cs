@@ -1,11 +1,11 @@
 namespace Delivera.Models
 {
-    class OrgOwner : BaseUser
+    public class OrgOwner : BaseUser
     {
         public OrgOwner()
         {
             GlobalRole = GlobalRole.OrgUser;
-            OrganizationRole = OrganizationRole.OrgOwner;
+            OrganizationRole = OrganizationRole.Owner;
         }
     }
 }

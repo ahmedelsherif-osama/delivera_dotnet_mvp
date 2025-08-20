@@ -4,7 +4,7 @@ namespace Delivera.Models
     {
         public AdminUser()
         {
-            globalRole = GlobalRole.SuperAdmin;
+            GlobalRole = GlobalRole.SuperAdmin;
         }
     }
 }

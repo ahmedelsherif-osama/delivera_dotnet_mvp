@@ -1,6 +1,27 @@
-@Delivera_HostAddress = http://localhost:5208
-
-GET {{Delivera_HostAddress}}/weatherforecast/
+POST http://localhost:5208/api/Auth/register
+Content-Type: application/json
 Accept: application/json
 
+{
+  "email": "test7@example.com",
+  "username": "superadmin",
+  "phoneNumber": "1234567890",
+  "firstName": "Test",
+  "lastName": "User",
+  "password": "changemE@123",
+  "globalRole": "superAdmin",
+  "nationalId": "12345678",
+  "dateOfBirth": "2005-05-12"
+  }
+
 ###
+
+POST http://localhost:5208/api/Auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "userName": "superadmin",
+  "password": "ChangeMe123!"
+  }
+
