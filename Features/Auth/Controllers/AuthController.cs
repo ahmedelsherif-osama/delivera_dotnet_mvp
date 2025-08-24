@@ -29,6 +29,8 @@ public class AuthController : ControllerBase
 
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             return BadRequest("Email already registered.");
+        if (await _context.Users.AnyAsync(u => u.PhoneNumber == request.PhoneNumber))
+            return BadRequest("Phone number already registered.");
 
         if (await _context.Users.AnyAsync(u => u.Username == request.Username))
             return BadRequest("Username is not available.");
@@ -51,7 +53,9 @@ public class AuthController : ControllerBase
                     Username = request.Username,
                     PasswordHash = HashPassword(request.Password),
                     GlobalRole = GlobalRole.SuperAdmin,
-                    IsActive = true
+                    IsActive = true,
+                    PhoneNumber = request.PhoneNumber
+
                 };
                 _context.Users.Add(user);
                 break;
@@ -69,7 +73,8 @@ public class AuthController : ControllerBase
                             Username = request.Username,
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
-                            IsActive = false
+                            IsActive = false,
+                            PhoneNumber = request.PhoneNumber
                         };
 
                         _context.Users.Add(user);
@@ -99,7 +104,9 @@ public class AuthController : ControllerBase
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
                             IsActive = false,
-                            OrganizationId = request.OrganizationId.Value
+                            OrganizationId = request.OrganizationId.Value,
+                            PhoneNumber = request.PhoneNumber
+
                         };
                         _context.Users.Add(user);
                         break;
