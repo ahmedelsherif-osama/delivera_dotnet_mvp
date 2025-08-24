@@ -8,6 +8,8 @@ namespace Delivera.Data
     {
         public DeliveraDbContext(DbContextOptions<DeliveraDbContext> options) : base(options) { }
         public DbSet<BaseUser> Users { get; set; } = null!;
+        public DbSet<Organization> Organizations { get; set; } = default!;
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -39,6 +41,5 @@ namespace Delivera.Data
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(bytes);
         }
-        public DbSet<Delivera.Models.Organization> Organization { get; set; } = default!;
     }
 }

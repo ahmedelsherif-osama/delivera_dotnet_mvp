@@ -14,7 +14,7 @@ namespace Delivera.Models
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public GlobalRole GlobalRole { get; set; }
-        public OrganizationRole OrganizationRole { get; set; } = OrganizationRole.Rider;
+        public OrganizationRole? OrganizationRole { get; set; }
 
 
         public Guid? CreatedById { get; set; }

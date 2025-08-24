@@ -5,7 +5,7 @@ namespace Delivera.Models
         public OrgOwner()
         {
             GlobalRole = GlobalRole.OrgUser;
-            OrganizationRole = OrganizationRole.Owner;
+            this.OrganizationRole = Delivera.Models.OrganizationRole.Owner;
         }
     }
 }

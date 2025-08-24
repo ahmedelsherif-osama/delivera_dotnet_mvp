@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Delivera.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Organization",
+                name: "Organizations",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -24,7 +24,7 @@ namespace Delivera.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Organization", x => x.Id);
+                    table.PrimaryKey("PK_Organizations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -43,7 +43,7 @@ namespace Delivera.Migrations
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     GlobalRole = table.Column<int>(type: "INTEGER", nullable: false),
-                    OrganizationRole = table.Column<int>(type: "INTEGER", nullable: false),
+                    OrganizationRole = table.Column<int>(type: "INTEGER", nullable: true),
                     CreatedById = table.Column<Guid>(type: "TEXT", nullable: true),
                     CreatedByUserId = table.Column<Guid>(type: "TEXT", nullable: true),
                     OrganizationId = table.Column<Guid>(type: "TEXT", nullable: true),
@@ -53,9 +53,9 @@ namespace Delivera.Migrations
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Users_Organization_OrganizationId",
+                        name: "FK_Users_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
-                        principalTable: "Organization",
+                        principalTable: "Organizations",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Users_Users_CreatedByUserId",
@@ -67,11 +67,11 @@ namespace Delivera.Migrations
             migrationBuilder.InsertData(
                 table: "Users",
                 columns: new[] { "Id", "CreatedAt", "CreatedById", "CreatedByUserId", "DateOfBirth", "Discriminator", "Email", "FirstName", "GlobalRole", "IsActive", "LastName", "NationalId", "OrganizationId", "OrganizationRole", "PasswordHash", "PhoneNumber", "Username" },
-                values: new object[] { new Guid("4e9fd1ca-d934-43fb-b2fb-cdbd7408d2c4"), new DateTime(2025, 8, 18, 6, 57, 15, 362, DateTimeKind.Utc).AddTicks(81), null, null, null, "BaseUser", "superadmin@delivera.com", "System", 0, true, "Admin", "", null, 3, "mkqr8OXPccrizqZGYTzn4qWRn6dY5WgZcEviWjosHws=", "", "superadmin" });
+                values: new object[] { new Guid("c0834df1-3533-4770-b0a4-b2cb19b43d2d"), new DateTime(2025, 8, 23, 0, 1, 47, 114, DateTimeKind.Utc).AddTicks(6444), null, null, null, "BaseUser", "superadmin@delivera.com", "System", 0, true, "Admin", "", null, null, "mkqr8OXPccrizqZGYTzn4qWRn6dY5WgZcEviWjosHws=", "", "superadmin" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Organization_OwnerId1",
-                table: "Organization",
+                name: "IX_Organizations_OwnerId1",
+                table: "Organizations",
                 column: "OwnerId1");
 
             migrationBuilder.CreateIndex(
@@ -85,8 +85,8 @@ namespace Delivera.Migrations
                 column: "OrganizationId");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Organization_Users_OwnerId1",
-                table: "Organization",
+                name: "FK_Organizations_Users_OwnerId1",
+                table: "Organizations",
                 column: "OwnerId1",
                 principalTable: "Users",
                 principalColumn: "Id",
@@ -97,14 +97,14 @@ namespace Delivera.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Organization_Users_OwnerId1",
-                table: "Organization");
+                name: "FK_Organizations_Users_OwnerId1",
+                table: "Organizations");
 
             migrationBuilder.DropTable(
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Organization");
+                name: "Organizations");
         }
     }
 }

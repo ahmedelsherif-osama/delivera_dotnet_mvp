@@ -24,6 +24,7 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest request)
     {
+        BaseUser user = new BaseUser();
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
@@ -38,21 +39,110 @@ public class AuthController : ControllerBase
                 return BadRequest("A SuperAdmin already exists.");
         }
 
-
-        var user = new BaseUser
+        switch (request.GlobalRole)
         {
-            Email = request.Email,
-            Username = request.Username,
-            PhoneNumber = request.PhoneNumber,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            PasswordHash = HashPassword(request.Password),
-            GlobalRole = request.GlobalRole,
-            IsActive = request.GlobalRole == GlobalRole.SuperAdmin
-        };
+            case GlobalRole.SuperAdmin:
+                user = new AdminUser
+                {
+                    Email = request.Email,
+                    Username = request.Username,
+                    PasswordHash = HashPassword(request.Password),
+                    GlobalRole = GlobalRole.SuperAdmin,
+                    IsActive = true
+                };
+                _context.Users.Add(user);
+                break;
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+            case GlobalRole.OrgUser:
+                if (!request.OrganizationRole.HasValue)
+                    return BadRequest("Organization role is required for OrgUser.");
+
+                switch (request.OrganizationRole.Value)
+                {
+                    case OrganizationRole.Owner:
+                        user = new OrgOwner
+                        {
+                            Email = request.Email,
+                            Username = request.Username,
+                            PasswordHash = HashPassword(request.Password),
+                            GlobalRole = GlobalRole.OrgUser,
+                            IsActive = false
+                        };
+
+                        _context.Users.Add(user);
+                        await _context.SaveChangesAsync(); // ✅ ensure user.Id exists
+
+                        var org = new Organization
+                        {
+                            IsApproved = false,
+                            OwnerId = user.Id // ✅ now safe
+                        };
+
+                        _context.Organizations.Add(org);
+                        await _context.SaveChangesAsync();
+
+                        // optional: link user → org for convenience
+                        user.OrganizationId = org.Id;
+                        await _context.SaveChangesAsync();
+                        break;
+
+                    case OrganizationRole.Admin:
+                        if (!request.OrganizationId.HasValue)
+                            return BadRequest("OrganizationId required for Admin.");
+                        user = new OrgAdmin
+                        {
+                            Email = request.Email,
+                            Username = request.Username,
+                            PasswordHash = HashPassword(request.Password),
+                            GlobalRole = GlobalRole.OrgUser,
+                            IsActive = false,
+                            OrganizationId = request.OrganizationId.Value
+                        };
+                        _context.Users.Add(user);
+                        break;
+
+                    case OrganizationRole.Support:
+                        if (!request.OrganizationId.HasValue)
+                            return BadRequest("OrganizationId required for Support.");
+                        user = new OrgSupport
+                        {
+                            Email = request.Email,
+                            Username = request.Username,
+                            PasswordHash = HashPassword(request.Password),
+                            GlobalRole = GlobalRole.OrgUser,
+                            IsActive = false,
+                            OrganizationId = request.OrganizationId.Value
+                        };
+                        _context.Users.Add(user);
+                        break;
+
+                    case OrganizationRole.Rider:
+                        if (!request.OrganizationId.HasValue)
+                            return BadRequest("OrganizationId required for Rider.");
+                        user = new Rider
+                        {
+                            Email = request.Email,
+                            Username = request.Username,
+                            PasswordHash = HashPassword(request.Password),
+                            GlobalRole = GlobalRole.OrgUser,
+                            IsActive = false,
+                            OrganizationId = request.OrganizationId.Value
+                        };
+                        _context.Users.Add(user);
+                        break;
+                }
+                break;
+        }
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            Console.WriteLine($"DB Update Error: {ex.InnerException?.Message}");
+            throw;
+        }
 
         return Ok(new RegisterResponse
         {
@@ -62,6 +152,7 @@ public class AuthController : ControllerBase
             IsActive = user.IsActive
         });
     }
+
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)

@@ -65,7 +65,7 @@ namespace Delivera.Migrations
                     b.Property<Guid?>("OrganizationId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("OrganizationRole")
+                    b.Property<int?>("OrganizationRole")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("PasswordHash")
@@ -95,15 +95,14 @@ namespace Delivera.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("4e9fd1ca-d934-43fb-b2fb-cdbd7408d2c4"),
-                            CreatedAt = new DateTime(2025, 8, 18, 6, 57, 15, 362, DateTimeKind.Utc).AddTicks(81),
+                            Id = new Guid("c0834df1-3533-4770-b0a4-b2cb19b43d2d"),
+                            CreatedAt = new DateTime(2025, 8, 23, 0, 1, 47, 114, DateTimeKind.Utc).AddTicks(6444),
                             Email = "superadmin@delivera.com",
                             FirstName = "System",
                             GlobalRole = 0,
                             IsActive = true,
                             LastName = "Admin",
                             NationalId = "",
-                            OrganizationRole = 3,
                             PasswordHash = "mkqr8OXPccrizqZGYTzn4qWRn6dY5WgZcEviWjosHws=",
                             PhoneNumber = "",
                             Username = "superadmin"
@@ -137,7 +136,7 @@ namespace Delivera.Migrations
 
                     b.HasIndex("OwnerId1");
 
-                    b.ToTable("Organization");
+                    b.ToTable("Organizations");
                 });
 
             modelBuilder.Entity("Delivera.Models.OrgOwner", b =>

@@ -5,7 +5,7 @@ namespace Delivera.Models
         public OrgSupport()
         {
             GlobalRole = GlobalRole.OrgUser;
-            OrganizationRole = OrganizationRole.Support;
+            this.OrganizationRole = Models.OrganizationRole.Support;
         }
     }
 }

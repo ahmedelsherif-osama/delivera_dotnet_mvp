@@ -9,9 +9,10 @@ Accept: application/json
   "firstName": "Test",
   "lastName": "User",
   "password": "changemE@123",
-  "globalRole": "superAdmin",
+  "globalRole": "orguser",
   "nationalId": "12345678",
-  "dateOfBirth": "2005-05-12"
+  "dateOfBirth": "2005-05-12",
+  "organizationRole":"Owner"
   }
 
 ###
@@ -24,4 +25,6 @@ Accept: application/json
   "userName": "superadmin",
   "password": "ChangeMe123!"
   }
+
+
 

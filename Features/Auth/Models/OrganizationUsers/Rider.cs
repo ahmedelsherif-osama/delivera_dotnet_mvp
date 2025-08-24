@@ -5,7 +5,7 @@ namespace Delivera.Models
         public Rider()
         {
             GlobalRole = GlobalRole.OrgUser;
-            OrganizationRole = OrganizationRole.Rider;
+            this.OrganizationRole = Models.OrganizationRole.Rider;
         }
     }
 }
