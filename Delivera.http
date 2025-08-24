@@ -3,8 +3,8 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "test7@example.com",
-  "username": "superadmin",
+  "email": "test13@example.com",
+  "username": "blablabla4",
   "phoneNumber": "1234567890",
   "firstName": "Test",
   "lastName": "User",

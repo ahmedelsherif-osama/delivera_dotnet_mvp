@@ -8,7 +8,12 @@ namespace Delivera.Data
     {
         public DeliveraDbContext(DbContextOptions<DeliveraDbContext> options) : base(options) { }
         public DbSet<BaseUser> Users { get; set; } = null!;
-        public DbSet<Organization> Organizations { get; set; } = default!;
+        public DbSet<Organization> Organizations { get; set; } = null!;
+        public DbSet<Permission> Permissions { get; set; } = null!;
+        public DbSet<RolePermission> RolePermissions { get; set; } = null!;
+        public DbSet<Order> Orders { get; set; } = null!;
+        public DbSet<Notification> Notifications { get; set; } = null!;
+        public DbSet<Location> Locations { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -32,6 +37,23 @@ namespace Delivera.Data
                 LastName = "Admin",
                 CreatedAt = DateTime.UtcNow
             });
+
+            modelBuilder.Entity<BaseUser>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
+            modelBuilder.Entity<BaseUser>()
+            .HasIndex(u => u.Username)
+            .IsUnique();
+
+            modelBuilder.Entity<Organization>()
+    .HasOne(o => o.Owner)
+    .WithMany()  // or .WithMany(u => u.OrganizationsOwned)
+    .HasForeignKey(o => o.OwnerId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+
+
 
 
         }

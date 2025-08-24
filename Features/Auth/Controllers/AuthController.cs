@@ -30,6 +30,9 @@ public class AuthController : ControllerBase
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             return BadRequest("Email already registered.");
 
+        if (await _context.Users.AnyAsync(u => u.Username == request.Username))
+            return BadRequest("Username is not available.");
+
         if (request.GlobalRole == GlobalRole.SuperAdmin)
         {
             bool superAdminExists = await _context.Users

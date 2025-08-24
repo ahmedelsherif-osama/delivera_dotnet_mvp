@@ -1,0 +1,39 @@
+3. Controller Endpoints (MVP)
+
+Auth / Users:
+
+POST /signup → create user, assign global role + org role
+
+POST /login → returns JWT token
+
+POST /logout → clear session
+
+POST /approveUser/{userId} → superadmin approves user
+
+POST /approveOrgUser/{userId} → orgowner approves user
+
+POST /assignPermissions/{userId} → assign role permissions once approved
+
+Organization:
+
+POST /organization → create org (orgowner or superadmin)
+
+POST /approveOrganization/{orgId} → superadmin approves org
+
+GET /organizations → list all orgs (optional filters)
+
+Orders & Location:
+
+POST /order → create order
+
+PATCH /order/{id}/status → update order status
+
+POST /order/{id}/location → add rider location update
+
+GET /order/{id} → get order details with locations
+
+Notifications:
+
+POST /notification → create notification
+
+GET /notifications/{userId} → list user notifications

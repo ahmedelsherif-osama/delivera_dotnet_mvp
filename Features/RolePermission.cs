@@ -1,6 +1,10 @@
-public class RolePermission
+namespace Delivera.Models
 {
-    public int Id { get; set; }
-    public string OrgRole { get; set; } // Owner/Admin/Support/Rider
-    public int PermissionId { get; set; }
+    public class RolePermission
+    {
+        public int Id { get; set; }
+        public string RoleName { get; set; } = null!; // just a name
+        public int PermissionId { get; set; }
+        public Permission Permission { get; set; } = null!;
+    }
 }
