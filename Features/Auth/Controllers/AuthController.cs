@@ -5,21 +5,28 @@ using Delivera.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
-using System.ComponentModel.DataAnnotations;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Delivera.Controllers;
+
 
 [ApiController]
 [Route("api/[controller]")]
 
 public class AuthController : ControllerBase
 {
+    private readonly IConfiguration _config;
     private readonly DeliveraDbContext _context;
-    public AuthController(DeliveraDbContext context) => _context = context;
+
+    public AuthController(DeliveraDbContext context, IConfiguration config)
+    {
+        _context = context;
+        _config = config;
+    }
 
     [HttpPost("register")]
     public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest request)
@@ -200,6 +207,29 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+    {
+        var tokenEntry = await _context.RefreshTokens
+            .FirstOrDefaultAsync(t => t.Token == request.RefreshToken && !t.IsRevoked);
+
+        if (tokenEntry == null || tokenEntry.ExpiresAt < DateTime.UtcNow)
+            return Unauthorized("Invalid or expired refresh token");
+
+        var user = await _context.Users.FindAsync(tokenEntry.UserId);
+        if (user == null) return Unauthorized("User not found");
+
+        var newAccessToken = GenerateJwtToken(user);
+
+        return Ok(new
+        {
+            AccessToken = newAccessToken,
+            RefreshToken = request.RefreshToken, // reuse same until expired/revoked
+            ExpiresIn = 3 * 60 * 60
+        });
+    }
+
+
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -209,7 +239,22 @@ public class AuthController : ControllerBase
                                       u.PasswordHash == HashPassword(request.Password));
         if (user == null)
             return Unauthorized("Invalid username or password");
+        // 🔑 Generate Access Token
+        var accessToken = GenerateJwtToken(user);
 
+        // 🔄 Generate Refresh Token
+        var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+        // Save refresh token in DB (with expiry)
+        var tokenEntry = new RefreshToken
+        {
+            UserId = user.Id,
+            Token = refreshToken,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.RefreshTokens.Add(tokenEntry);
+        await _context.SaveChangesAsync();
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Username),
@@ -225,8 +270,43 @@ public class AuthController : ControllerBase
             authProperties
         );
 
-        return Ok(new { message = "Login successful", user.Id, user.Username, user.GlobalRole });
+        return Ok(new
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            ExpiresIn = 3 * 60 * 60, // 3 hours in seconds
+            message = "Login successful",
+            user.Id,
+            user.Username,
+            user.GlobalRole
+        });
+
+
+
     }
+
+    private string GenerateJwtToken(BaseUser user)
+    {
+        var claims = new[]
+        {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Name, user.Username),
+        new Claim("Role", user.GlobalRole.ToString())
+    };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _config["Jwt:Issuer"],
+            audience: _config["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(int.Parse(_config["Jwt:AccessTokenExpiryHours"]!)),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
 
     private static string HashPassword(string password)
     {

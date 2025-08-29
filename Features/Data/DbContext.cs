@@ -15,6 +15,8 @@ namespace Delivera.Data
         public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<Location> Locations { get; set; } = null!;
 
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +39,12 @@ namespace Delivera.Data
                 LastName = "Admin",
                 CreatedAt = DateTime.UtcNow
             });
+
+            modelBuilder.Entity<RefreshToken>()
+           .HasOne(r => r.User)
+           .WithMany() // keep simple, no back-collection needed for MVP
+           .HasForeignKey(r => r.UserId)
+           .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<BaseUser>()
             .HasIndex(u => u.Email)
