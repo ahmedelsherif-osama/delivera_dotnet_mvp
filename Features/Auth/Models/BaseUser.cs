@@ -11,7 +11,7 @@ namespace Delivera.Models
         public string LastName { get; set; } = string.Empty;
         public DateTime? DateOfBirth { get; set; }
         public string NationalId { get; set; } = string.Empty;
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public GlobalRole GlobalRole { get; set; }
         public OrganizationRole? OrganizationRole { get; set; }
@@ -19,6 +19,10 @@ namespace Delivera.Models
 
         public Guid? CreatedById { get; set; }
         public BaseUser? CreatedByUser { get; set; }
+
+        public Guid? ApprovedById { get; set; }
+        public BaseUser? ApprovedByUser { get; set; }
+
 
         public Guid? OrganizationId { get; set; }
         public Organization? Organization { get; set; }

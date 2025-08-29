@@ -31,6 +31,8 @@ public class AuthController : ControllerBase
             return BadRequest("Email already registered.");
         if (await _context.Users.AnyAsync(u => u.PhoneNumber == request.PhoneNumber))
             return BadRequest("Phone number already registered.");
+        if (await _context.Users.AnyAsync(u => u.NationalId == request.NationalId))
+            return BadRequest("National Id already registered.");
 
         if (await _context.Users.AnyAsync(u => u.Username == request.Username))
             return BadRequest("Username is not available.");
@@ -54,7 +56,12 @@ public class AuthController : ControllerBase
                     PasswordHash = HashPassword(request.Password),
                     GlobalRole = GlobalRole.SuperAdmin,
                     IsActive = true,
-                    PhoneNumber = request.PhoneNumber
+                    PhoneNumber = request.PhoneNumber,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    DateOfBirth = request.DateOfBirth,
+                    NationalId = request.NationalId,
+
 
                 };
                 _context.Users.Add(user);
@@ -74,7 +81,15 @@ public class AuthController : ControllerBase
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
                             IsActive = false,
-                            PhoneNumber = request.PhoneNumber
+                            PhoneNumber = request.PhoneNumber,
+                            FirstName = request.FirstName,
+                            LastName = request.LastName,
+                            DateOfBirth = request.DateOfBirth,
+                            NationalId = request.NationalId,
+                            OrganizationRole = OrganizationRole.Owner,
+                            CreatedById = request.CreatedById,
+                            OrganizationId = request.OrganizationId
+
                         };
 
                         _context.Users.Add(user);
@@ -105,7 +120,13 @@ public class AuthController : ControllerBase
                             GlobalRole = GlobalRole.OrgUser,
                             IsActive = false,
                             OrganizationId = request.OrganizationId.Value,
-                            PhoneNumber = request.PhoneNumber
+                            PhoneNumber = request.PhoneNumber,
+                            FirstName = request.FirstName,
+                            LastName = request.LastName,
+                            DateOfBirth = request.DateOfBirth,
+                            NationalId = request.NationalId,
+                            OrganizationRole = OrganizationRole.Admin,
+                            CreatedById = request.CreatedById,
 
                         };
                         _context.Users.Add(user);
@@ -121,7 +142,15 @@ public class AuthController : ControllerBase
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
                             IsActive = false,
-                            OrganizationId = request.OrganizationId.Value
+                            OrganizationId = request.OrganizationId.Value,
+                            FirstName = request.FirstName,
+                            LastName = request.LastName,
+                            DateOfBirth = request.DateOfBirth,
+                            NationalId = request.NationalId,
+                            OrganizationRole = OrganizationRole.Support,
+                            PhoneNumber = request.PhoneNumber,
+
+                            CreatedById = request.CreatedById
                         };
                         _context.Users.Add(user);
                         break;
@@ -136,7 +165,15 @@ public class AuthController : ControllerBase
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
                             IsActive = false,
-                            OrganizationId = request.OrganizationId.Value
+                            OrganizationId = request.OrganizationId.Value,
+                            FirstName = request.FirstName,
+                            LastName = request.LastName,
+                            DateOfBirth = request.DateOfBirth,
+                            NationalId = request.NationalId,
+                            PhoneNumber = request.PhoneNumber,
+
+                            OrganizationRole = OrganizationRole.Rider,
+                            CreatedById = request.CreatedById
                         };
                         _context.Users.Add(user);
                         break;

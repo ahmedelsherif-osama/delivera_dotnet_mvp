@@ -30,3 +30,11 @@ appsettings.Development.json
 # Dotnet User Secrets
 secrets.json
 2!<~>?
+
+# SQLite runtime files
+*.db-shm
+*.db-wal
+*.db
+
+# User-specific test files
+*.http

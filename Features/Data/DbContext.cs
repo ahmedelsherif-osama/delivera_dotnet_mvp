@@ -46,6 +46,18 @@ namespace Delivera.Data
             .HasIndex(u => u.Username)
             .IsUnique();
 
+            // Relationship: CreatedBy
+            modelBuilder.Entity<BaseUser>().HasOne(u => u.CreatedByUser)
+                  .WithMany() // no back-collection defined
+                  .HasForeignKey(u => u.CreatedById)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Relationship: ApprovedBy
+            modelBuilder.Entity<BaseUser>().HasOne(u => u.ApprovedByUser)
+                  .WithMany()
+                  .HasForeignKey(u => u.ApprovedById)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Organization>()
     .HasOne(o => o.Owner)
     .WithMany()  // or .WithMany(u => u.OrganizationsOwned)
