@@ -11,8 +11,13 @@ namespace Delivera.Models
         public string LastName { get; set; } = string.Empty;
         public DateTime? DateOfBirth { get; set; }
         public string NationalId { get; set; } = string.Empty;
-        public bool IsActive { get; set; } = false;
+        public bool IsOrgOwnerApproved { get; set; } = false;
+        public bool IsSuperAdminApproved { get; set; } = false;
+
+        public bool IsActive => IsOrgOwnerApproved && IsSuperAdminApproved;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime ApprovedAt { get; set; } = DateTime.UtcNow;
         public GlobalRole GlobalRole { get; set; }
         public OrganizationRole? OrganizationRole { get; set; }
 

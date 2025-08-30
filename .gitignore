@@ -31,6 +31,7 @@ appsettings.Development.json
 secrets.json
 2!<~>?
 
+
 # SQLite runtime files
 *.db-shm
 *.db-wal

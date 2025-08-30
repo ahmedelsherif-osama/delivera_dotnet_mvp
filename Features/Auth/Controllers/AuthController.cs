@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Delivera.Controllers;
 
@@ -62,7 +64,6 @@ public class AuthController : ControllerBase
                     Username = request.Username,
                     PasswordHash = HashPassword(request.Password),
                     GlobalRole = GlobalRole.SuperAdmin,
-                    IsActive = true,
                     PhoneNumber = request.PhoneNumber,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
@@ -87,13 +88,13 @@ public class AuthController : ControllerBase
                             Username = request.Username,
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
-                            IsActive = false,
                             PhoneNumber = request.PhoneNumber,
                             FirstName = request.FirstName,
                             LastName = request.LastName,
                             DateOfBirth = request.DateOfBirth,
                             NationalId = request.NationalId,
                             OrganizationRole = OrganizationRole.Owner,
+                            IsOrgOwnerApproved = true,
                             CreatedById = request.CreatedById,
                             OrganizationId = request.OrganizationId
 
@@ -125,7 +126,6 @@ public class AuthController : ControllerBase
                             Username = request.Username,
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
-                            IsActive = false,
                             OrganizationId = request.OrganizationId.Value,
                             PhoneNumber = request.PhoneNumber,
                             FirstName = request.FirstName,
@@ -148,7 +148,6 @@ public class AuthController : ControllerBase
                             Username = request.Username,
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
-                            IsActive = false,
                             OrganizationId = request.OrganizationId.Value,
                             FirstName = request.FirstName,
                             LastName = request.LastName,
@@ -171,7 +170,6 @@ public class AuthController : ControllerBase
                             Username = request.Username,
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
-                            IsActive = false,
                             OrganizationId = request.OrganizationId.Value,
                             FirstName = request.FirstName,
                             LastName = request.LastName,
@@ -261,14 +259,6 @@ public class AuthController : ControllerBase
             new Claim("Role", user.GlobalRole.ToString())
         };
 
-        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var authProperties = new AuthenticationProperties { IsPersistent = true };
-
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(claimsIdentity),
-            authProperties
-        );
 
         return Ok(new
         {
@@ -284,6 +274,74 @@ public class AuthController : ControllerBase
 
 
     }
+
+    [HttpPost("approve/superadmin/{userId:guid}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> ApproveBySuperAdmin(Guid userId)
+    {
+        // 🔑 Verify JWT
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var role = User.FindFirstValue("Role");
+
+        // No identity (JWT missing/invalid) → 401
+        if (callerId == null)
+            return Unauthorized("Please login and try again!");
+
+        // Identity exists but not enough privileges → 403
+        if (role != GlobalRole.SuperAdmin.ToString())
+            return StatusCode(StatusCodes.Status403Forbidden,
+        new { message = "Only SuperAdmins can approve users." });
+
+
+        var userToApprove = await _context.Users.FindAsync(userId);
+        if (userToApprove == null)
+            return NotFound("User not found.");
+
+        if (userToApprove.IsSuperAdminApproved)
+            return BadRequest("User is already approved by SuperAdmin.");
+
+        userToApprove.IsSuperAdminApproved = true;
+        userToApprove.ApprovedById = Guid.Parse(callerId);
+        userToApprove.ApprovedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "User approved by SuperAdmin.", userToApprove.Id, userToApprove.IsSuperAdminApproved });
+    }
+
+
+    [HttpPost("approve/orgowner/{userId:guid}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> ApproveByOrgOwner(Guid userId)
+    {
+        // 🔑 Verify JWT
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var role = User.FindFirstValue("Role");
+
+        if (callerId == null || role != GlobalRole.OrgUser.ToString())
+            return Forbid("Only OrgUsers (OrgOwner specifically) can approve users.");
+
+        var orgOwner = await _context.Users.FindAsync(Guid.Parse(callerId));
+        if (orgOwner == null || orgOwner.OrganizationRole != OrganizationRole.Owner)
+            return Forbid("Caller must be an Organization Owner.");
+
+        var userToApprove = await _context.Users.FindAsync(userId);
+        if (userToApprove == null)
+            return NotFound("User not found.");
+
+        if (userToApprove.OrganizationId != orgOwner.OrganizationId)
+            return Forbid("Cannot approve users outside your organization.");
+
+        if (userToApprove.IsOrgOwnerApproved)
+            return BadRequest("User is already approved by OrgOwner.");
+
+        userToApprove.IsOrgOwnerApproved = true;
+        userToApprove.ApprovedById = orgOwner.Id;
+        userToApprove.ApprovedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "User approved by OrgOwner.", userToApprove.Id, userToApprove.IsOrgOwnerApproved });
+    }
+
 
     private string GenerateJwtToken(BaseUser user)
     {

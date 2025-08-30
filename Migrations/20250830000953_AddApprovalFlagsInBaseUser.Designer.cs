@@ -3,6 +3,7 @@ using System;
 using Delivera.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Delivera.Migrations
 {
     [DbContext(typeof(DeliveraDbContext))]
-    partial class DeliveraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250830000953_AddApprovalFlagsInBaseUser")]
+    partial class AddApprovalFlagsInBaseUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.19");
@@ -21,9 +24,6 @@ namespace Delivera.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ApprovedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("ApprovedById")
@@ -109,9 +109,8 @@ namespace Delivera.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("770ba99e-9c45-4dd7-aa7f-dbcad5865123"),
-                            ApprovedAt = new DateTime(2025, 8, 30, 0, 17, 15, 569, DateTimeKind.Utc).AddTicks(1826),
-                            CreatedAt = new DateTime(2025, 8, 30, 0, 17, 15, 569, DateTimeKind.Utc).AddTicks(1830),
+                            Id = new Guid("886c8ebb-d966-4d13-a21c-2ff52212e7ce"),
+                            CreatedAt = new DateTime(2025, 8, 30, 0, 9, 52, 771, DateTimeKind.Utc).AddTicks(7329),
                             Email = "superadmin@delivera.com",
                             FirstName = "System",
                             GlobalRole = 0,

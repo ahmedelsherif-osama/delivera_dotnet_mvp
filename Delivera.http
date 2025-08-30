@@ -1,16 +1,17 @@
 POST http://localhost:5208/api/Auth/register
 Content-Type: application/json
 Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjBlNzY5NmZhLTgxM2EtNGU4My1iMWU4LTlkMDVjMmExZWIyYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJibGFibGFibGEyIiwiUm9sZSI6Ik9yZ1VzZXIiLCJleHAiOjE3NTY1MjkwMTAsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9.-wEGuiZlbZa4l7VtWwCNl0n_jHmUwGBZvGU1QSSaI48
 
 {
-  "email": "rider1@example.com",
-  "username": "rider1",
-  "phoneNumber": "1234567820",
+  "email": "rider3@example.com",
+  "username": "rider3",
+  "phoneNumber": "1234567821",
   "firstName": "Test",
   "lastName": "User",
   "password": "changemE@123",
   "globalRole": "orguser",
-  "nationalId": "12345678",
+  "nationalId": "123456777",
   "dateOfBirth": "2005-05-12",
   "organizationRole":"rider",
   "organizationId":"AD8EA38C-36C2-48E9-B6D8-558EC4D9EE8B"
@@ -25,7 +26,27 @@ Accept: application/json
 {
   "userName": "superadmin",
   "password": "ChangeMe123!"
-  }
+    # "password": "changemE@123"
+
+    
+
+}
+
+###
+
+
+POST http://localhost:5208/api/Auth/approve/superadmin/0E7696FA-813A-4E83-B1E8-9D05C2A1EB2C
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6Ijc3MGJhOTllLTljNDUtNGRkNy1hYTdmLWRiY2FkNTg2NTEyMyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJzdXBlcmFkbWluIiwiUm9sZSI6IlN1cGVyQWRtaW4iLCJleHAiOjE3NTY1MjkwNzEsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9._TNX247EtBOT9bCsUO_5CCu3qDTSd7EfZaaoQJBmE1A
+
+
+###
+POST http://localhost:5208/api/Auth/approve/orgowner/6FE33424-1996-4EF0-B0D1-6D92B337EF8B
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjBlNzY5NmZhLTgxM2EtNGU4My1iMWU4LTlkMDVjMmExZWIyYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJibGFibGFibGEyIiwiUm9sZSI6Ik9yZ1VzZXIiLCJleHAiOjE3NTY1MjY0MzEsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9.CVJe5Ts_PTRipXSSHcEkX_39Wp_yw4wA9hQkehZIVuU
+
 
 
 

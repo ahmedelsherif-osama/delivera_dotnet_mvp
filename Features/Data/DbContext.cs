@@ -34,7 +34,8 @@ namespace Delivera.Data
                 Username = "superadmin",
                 PasswordHash = passwordHash,
                 GlobalRole = GlobalRole.SuperAdmin,
-                IsActive = true,
+                IsOrgOwnerApproved = true,
+                IsSuperAdminApproved = true,
                 FirstName = "System",
                 LastName = "Admin",
                 CreatedAt = DateTime.UtcNow
