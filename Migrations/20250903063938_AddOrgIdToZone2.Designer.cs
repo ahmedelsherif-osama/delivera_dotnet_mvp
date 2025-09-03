@@ -3,6 +3,7 @@ using System;
 using Delivera.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Delivera.Migrations
 {
     [DbContext(typeof(DeliveraDbContext))]
-    partial class DeliveraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250903063938_AddOrgIdToZone2")]
+    partial class AddOrgIdToZone2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.19");
@@ -109,9 +112,9 @@ namespace Delivera.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("2fd49f9c-2bf1-42bd-80e2-58959a6bdfc7"),
-                            ApprovedAt = new DateTime(2025, 9, 3, 6, 40, 3, 510, DateTimeKind.Utc).AddTicks(7243),
-                            CreatedAt = new DateTime(2025, 9, 3, 6, 40, 3, 510, DateTimeKind.Utc).AddTicks(7246),
+                            Id = new Guid("5e593af0-61ba-4052-821e-9c23e11909fa"),
+                            ApprovedAt = new DateTime(2025, 9, 3, 6, 39, 37, 979, DateTimeKind.Utc).AddTicks(3325),
+                            CreatedAt = new DateTime(2025, 9, 3, 6, 39, 37, 979, DateTimeKind.Utc).AddTicks(3332),
                             Email = "superadmin@delivera.com",
                             FirstName = "System",
                             GlobalRole = 0,

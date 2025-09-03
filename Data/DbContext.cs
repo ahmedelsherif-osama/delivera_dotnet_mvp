@@ -1,7 +1,13 @@
+using NetTopologySuite.Geometries;
+using NetTopologySuite.IO;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Data.Sqlite;
 using Delivera.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+
+
 namespace Delivera.Data
 {
     public class DeliveraDbContext : DbContext
@@ -13,9 +19,10 @@ namespace Delivera.Data
         public DbSet<RolePermission> RolePermissions { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
         public DbSet<Notification> Notifications { get; set; } = null!;
-        public DbSet<Location> Locations { get; set; } = null!;
+        public DbSet<Delivera.Models.Location> Locations { get; set; } = null!;
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Zone> Zones { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -47,6 +54,12 @@ namespace Delivera.Data
            .HasForeignKey(r => r.UserId)
            .OnDelete(DeleteBehavior.Cascade);
 
+           modelBuilder.Entity<Zone>()
+           .HasOne(z => z.Org)
+           .WithMany()
+           .HasForeignKey(z => z.OrganizationId)
+           .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<BaseUser>()
             .HasIndex(u => u.Email)
             .IsUnique();
@@ -73,6 +86,15 @@ namespace Delivera.Data
     .HasForeignKey(o => o.OwnerId)
     .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Order>().OwnsOne(o => o.PickUpLocation);
+            modelBuilder.Entity<Order>().OwnsOne(o => o.DropOffLocation);
+             modelBuilder.Entity<Zone>()
+    .Property(z => z.Area)
+    .HasConversion(
+        v => v.AsText(),                // Polygon -> WKT string
+        v => new WKTReader().Read(v) as Polygon // WKT string -> Polygon
+    );
+
 
 
 
@@ -84,5 +106,12 @@ namespace Delivera.Data
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(bytes);
         }
+
+       
+
+
     }
+
+
+
 }

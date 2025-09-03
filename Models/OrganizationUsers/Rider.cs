@@ -1,6 +1,6 @@
 namespace Delivera.Models
 {
-    class Rider : BaseUser
+    public class Rider : BaseUser
     {
         public Rider()
         {

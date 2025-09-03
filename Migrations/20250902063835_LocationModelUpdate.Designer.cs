@@ -3,6 +3,7 @@ using System;
 using Delivera.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Delivera.Migrations
 {
     [DbContext(typeof(DeliveraDbContext))]
-    partial class DeliveraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250902063835_LocationModelUpdate")]
+    partial class LocationModelUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.19");
@@ -109,9 +112,9 @@ namespace Delivera.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("2fd49f9c-2bf1-42bd-80e2-58959a6bdfc7"),
-                            ApprovedAt = new DateTime(2025, 9, 3, 6, 40, 3, 510, DateTimeKind.Utc).AddTicks(7243),
-                            CreatedAt = new DateTime(2025, 9, 3, 6, 40, 3, 510, DateTimeKind.Utc).AddTicks(7246),
+                            Id = new Guid("03d2aaf4-f494-4f17-9b6e-c1040aee1d23"),
+                            ApprovedAt = new DateTime(2025, 9, 2, 6, 38, 34, 550, DateTimeKind.Utc).AddTicks(7967),
+                            CreatedAt = new DateTime(2025, 9, 2, 6, 38, 34, 550, DateTimeKind.Utc).AddTicks(7975),
                             Email = "superadmin@delivera.com",
                             FirstName = "System",
                             GlobalRole = 0,
@@ -123,6 +126,30 @@ namespace Delivera.Migrations
                             PhoneNumber = "",
                             Username = "superadmin"
                         });
+                });
+
+            modelBuilder.Entity("Delivera.Models.Location", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Locations");
                 });
 
             modelBuilder.Entity("Delivera.Models.Notification", b =>
@@ -158,15 +185,17 @@ namespace Delivera.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("OrderDetails")
-                        .IsRequired()
+                    b.Property<Guid>("DropOffLocationId")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("RiderId")
+                    b.Property<Guid>("PickUpLocationId")
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("RiderId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
@@ -175,6 +204,10 @@ namespace Delivera.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DropOffLocationId");
+
+                    b.HasIndex("PickUpLocationId");
 
                     b.ToTable("Orders");
                 });
@@ -274,34 +307,6 @@ namespace Delivera.Migrations
                     b.ToTable("RolePermissions");
                 });
 
-            modelBuilder.Entity("Delivera.Models.Zone", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Area")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("WktPolygon")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.ToTable("Zones");
-                });
-
             modelBuilder.Entity("Delivera.Models.OrgOwner", b =>
                 {
                     b.HasBaseType("Delivera.Models.BaseUser");
@@ -334,63 +339,21 @@ namespace Delivera.Migrations
 
             modelBuilder.Entity("Delivera.Models.Order", b =>
                 {
-                    b.OwnsOne("Delivera.Models.Location", "DropOffLocation", b1 =>
-                        {
-                            b1.Property<Guid>("OrderId")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Address")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<double>("Latitude")
-                                .HasColumnType("REAL");
-
-                            b1.Property<double>("Longitude")
-                                .HasColumnType("REAL");
-
-                            b1.Property<DateTime>("Timestamp")
-                                .HasColumnType("TEXT");
-
-                            b1.HasKey("OrderId");
-
-                            b1.ToTable("Orders");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrderId");
-                        });
-
-                    b.OwnsOne("Delivera.Models.Location", "PickUpLocation", b1 =>
-                        {
-                            b1.Property<Guid>("OrderId")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Address")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<double>("Latitude")
-                                .HasColumnType("REAL");
-
-                            b1.Property<double>("Longitude")
-                                .HasColumnType("REAL");
-
-                            b1.Property<DateTime>("Timestamp")
-                                .HasColumnType("TEXT");
-
-                            b1.HasKey("OrderId");
-
-                            b1.ToTable("Orders");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrderId");
-                        });
-
-                    b.Navigation("DropOffLocation")
+                    b.HasOne("Delivera.Models.Location", "DropOffLocation")
+                        .WithMany()
+                        .HasForeignKey("DropOffLocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PickUpLocation")
+                    b.HasOne("Delivera.Models.Location", "PickUpLocation")
+                        .WithMany()
+                        .HasForeignKey("PickUpLocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("DropOffLocation");
+
+                    b.Navigation("PickUpLocation");
                 });
 
             modelBuilder.Entity("Delivera.Models.Organization", b =>
@@ -424,17 +387,6 @@ namespace Delivera.Migrations
                         .IsRequired();
 
                     b.Navigation("Permission");
-                });
-
-            modelBuilder.Entity("Delivera.Models.Zone", b =>
-                {
-                    b.HasOne("Delivera.Models.Organization", "Org")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Org");
                 });
 
             modelBuilder.Entity("Delivera.Models.Organization", b =>

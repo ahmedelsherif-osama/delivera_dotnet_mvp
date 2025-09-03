@@ -12,6 +12,13 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Delivera.Services;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using NetTopologySuite.Geometries;
+using NetTopologySuite.IO;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Delivera.Controllers;
 
@@ -24,10 +31,222 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _config;
     private readonly DeliveraDbContext _context;
 
+    private readonly SessionManager _sessionManager;
+
     public AuthController(DeliveraDbContext context, IConfiguration config)
     {
         _context = context;
         _config = config;
+    }
+        
+    [Authorize]
+    [HttpGet("getzone/{id}")]
+    public async Task<IActionResult> GetZone(Guid id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        var orgId = User.FindFirstValue("OrgId");
+
+
+    if (string.IsNullOrEmpty(userId)) return Unauthorized("Invalid token");
+
+    if (role == OrganizationRole.Rider.ToString() || role == OrganizationRole.Support.ToString())
+        return Unauthorized("This user type cannot access zones");
+
+    // if (orgId != orderRequest.OrganizationId.ToString())
+    //     return Unauthorized("User does not belong to this organization");
+        var zone = await _context.Zones.FindAsync(id);
+        if (zone == null) return NotFound();
+        var response = new ZoneResponse
+        {
+        Id = zone.Id,
+        Name = zone.Name,
+        WktPolygon = zone.Area.AsText() // Convert Geometry to WKT string
+    
+        };
+
+        return Ok(response);
+    }
+
+    [Authorize]
+    [HttpPost("zones")]
+    public async Task<IActionResult> CreateZone([FromBody] CreateZoneRequest dto)
+    {
+             //token check
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        var orgId = User.FindFirstValue("OrgId");
+        if (string.IsNullOrEmpty(orgId)) return BadRequest("OrganizationId missing");
+
+
+
+    if (string.IsNullOrEmpty(userId)) return Unauthorized("Invalid token");
+
+    if (role == OrganizationRole.Rider.ToString() || role == OrganizationRole.Support.ToString())
+        return Unauthorized("This user type cannot create zones");
+
+    // if (orgId != orderRequest.OrganizationId.ToString())
+    //     return Unauthorized("User does not belong to this organization");
+
+        var wktReader = new WKTReader();
+        Geometry area;
+
+        try
+        {
+            area = wktReader.Read(dto.WktPolygon);
+            if (!(area is Polygon || area is MultiPolygon))
+            {
+                return BadRequest("The WKT must represent a Polygon or MultiPolygon.");
+            }
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Invalid WKT format: {ex.Message}");
+        }
+
+        var zone = new Zone
+        {
+            Name = dto.Name,
+            WktPolygon = dto.WktPolygon,
+            Area = area,
+            OrganizationId = Guid.Parse(orgId)
+        };
+
+        _context.Zones.Add(zone);
+        await _context.SaveChangesAsync();
+        var response = new ZoneResponse
+        {
+        Id = zone.Id,
+        Name = zone.Name,
+        WktPolygon = zone.Area.AsText()
+        };
+
+        return CreatedAtAction(nameof(GetZone), new { id = zone.Id }, response);
+    }
+
+    [Authorize]
+[HttpPost("assignRider")]
+public ActionResult AssignRider(Guid orderId)
+{
+    // ✅ 1. Find order
+    var order = _context.Orders.Find(orderId);
+    if (order == null) return NotFound(new { error = "Order not found" });
+
+    // ✅ 2. Check user permissions
+    var role = User.FindFirstValue("role");
+    if (role != OrganizationRole.Owner.ToString() &&
+        role != OrganizationRole.Admin.ToString())
+    {
+        return Forbid("Only admins or owners can assign riders");
+    }
+
+    // ✅ 3. Determine zone (MVP = naive approach)
+    var pickupPoint = new NetTopologySuite.Geometries.Point(
+        order.PickUpLocation.Latitude,
+        order.PickUpLocation.Longitude
+    );
+
+    var zone = _context.Zones.FirstOrDefault(z => z.Area.Contains(pickupPoint));
+    if (zone == null)
+        return NotFound(new { error = "Pickup location not in any zone" });
+
+    // ✅ 4. Find nearest rider in that zone
+    var rider = _sessionManager.GetNearestActiveRider(
+        order.PickUpLocation.Latitude,
+        order.PickUpLocation.Longitude,
+        zone.Name
+    );
+
+    if (rider == null)
+        return NotFound(new { error = "No active rider available in this zone" });
+
+    // ✅ 5. Update order + rider
+    order.Status = OrderStatus.Assigned;
+    order.RiderId = rider.RiderId; // 🔴 for MVP only, better to store RiderId as Guid
+    rider.ActiveOrders.Add(order.Id);
+
+    _context.SaveChanges();
+
+    return Ok(new
+    {
+        message = "Rider assigned",
+        riderId = rider.RiderId
+    });
+}
+
+
+    [Authorize]
+    [HttpPost("createOrder")]
+    public async Task<ActionResult> CreateOrder([FromBody] OrderRequest orderRequest)
+    {
+        if (orderRequest.OrderDetails == null || orderRequest.OrderDetails=="")
+        {
+            return BadRequest("Order details are required!");
+        }
+        if (orderRequest.OrganizationId == null )
+        {
+            return BadRequest("Organization Id is required!");
+        }
+        if (orderRequest.PickUpLocation == null)
+        {
+            return BadRequest("Pickup location is required!");
+        }
+        if (orderRequest.DropOffLocation == null)
+        {
+            return BadRequest("DropOff location is required!");
+        }
+
+     //token check
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        var orgId = User.FindFirstValue("OrgId");
+
+
+    if (string.IsNullOrEmpty(userId)) return Unauthorized("Invalid token");
+
+    if (role == OrganizationRole.Rider.ToString())
+        return Unauthorized("Riders cannot create orders");
+
+    if (orgId != orderRequest.OrganizationId.ToString())
+        return Unauthorized("User does not belong to this organization");
+
+
+    // Validate input
+    if (string.IsNullOrWhiteSpace(orderRequest.OrderDetails))
+        return BadRequest("Order details are required!");
+
+    if (orderRequest.PickUpLocation == null)
+        return BadRequest("Pickup location is required!");
+
+    if (orderRequest.DropOffLocation == null)
+        return BadRequest("DropOff location is required!");
+
+        Order order = new Order
+        {
+            OrganizationId = orderRequest.OrganizationId,
+            Status = OrderStatus.Created,
+            PickUpLocation = orderRequest.PickUpLocation,
+            DropOffLocation = orderRequest.DropOffLocation,
+            OrderDetails = orderRequest.OrderDetails
+        };
+        _context.Orders.Add(order);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            Console.WriteLine($"DB Update Error: {ex.InnerException?.Message}");
+            throw;
+        }
+
+        return Ok(new { message = "Order created successfully!" });
+
+
     }
 
     [HttpPost("register")]
@@ -343,27 +562,7 @@ public class AuthController : ControllerBase
     }
 
 
-    private string GenerateJwtToken(BaseUser user)
-    {
-        var claims = new[]
-        {
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Name, user.Username),
-        new Claim("Role", user.GlobalRole.ToString())
-    };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _config["Jwt:Issuer"],
-            audience: _config["Jwt:Audience"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(int.Parse(_config["Jwt:AccessTokenExpiryHours"]!)),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
 
 
     private static string HashPassword(string password)
@@ -372,4 +571,30 @@ public class AuthController : ControllerBase
         var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
         return Convert.ToBase64String(bytes);
     }
+
+
+private string GenerateJwtToken(BaseUser user)
+{
+    var claims = new[]
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim("OrgId", user.OrganizationId?.ToString() ?? ""),
+        new Claim(ClaimTypes.Role, user.OrganizationRole?.ToString() ?? "")
+
+    };
+
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+    var token = new JwtSecurityToken(
+        issuer: _config["Jwt:Issuer"],
+        audience: _config["Jwt:Audience"],
+        claims: claims,
+        expires: DateTime.UtcNow.AddHours(2),
+        signingCredentials: creds
+    );
+
+    return new JwtSecurityTokenHandler().WriteToken(token);
+}
 }

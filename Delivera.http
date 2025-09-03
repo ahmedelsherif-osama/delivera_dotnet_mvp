@@ -1,17 +1,16 @@
 POST http://localhost:5208/api/Auth/register
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjBlNzY5NmZhLTgxM2EtNGU4My1iMWU4LTlkMDVjMmExZWIyYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJibGFibGFibGEyIiwiUm9sZSI6Ik9yZ1VzZXIiLCJleHAiOjE3NTY1MjkwMTAsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9.-wEGuiZlbZa4l7VtWwCNl0n_jHmUwGBZvGU1QSSaI48
 
 {
-  "email": "rider3@example.com",
-  "username": "rider3",
-  "phoneNumber": "1234567821",
+  "email": "rider4@example.com",
+  "username": "rider4",
+  "phoneNumber": "1234567822",
   "firstName": "Test",
   "lastName": "User",
   "password": "changemE@123",
   "globalRole": "orguser",
-  "nationalId": "123456777",
+  "nationalId": "123456333",
   "dateOfBirth": "2005-05-12",
   "organizationRole":"rider",
   "organizationId":"AD8EA38C-36C2-48E9-B6D8-558EC4D9EE8B"
@@ -24,9 +23,10 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "userName": "superadmin",
-  "password": "ChangeMe123!"
-    # "password": "changemE@123"
+  "userName": "rider1",
+    "password": "changemE@123"
+      # "password": "ChangeMe123!"
+
 
     
 
@@ -42,10 +42,55 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hc
 
 
 ###
-POST http://localhost:5208/api/Auth/approve/orgowner/6FE33424-1996-4EF0-B0D1-6D92B337EF8B
+POST http://localhost:5208/api/Auth/approve/orgowner/0E7696FA-813A-4E83-B1E8-9D05C2A1EB2C
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjBlNzY5NmZhLTgxM2EtNGU4My1iMWU4LTlkMDVjMmExZWIyYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJibGFibGFibGEyIiwiUm9sZSI6Ik9yZ1VzZXIiLCJleHAiOjE3NTY1MjY0MzEsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9.CVJe5Ts_PTRipXSSHcEkX_39Wp_yw4wA9hQkehZIVuU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjBlNzY5NmZhLTgxM2EtNGU4My1iMWU4LTlkMDVjMmExZWIyYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJibGFibGFibGEyIiwiUm9sZSI6Ik9yZ1VzZXIiLCJleHAiOjE3NTY1MjkyMTAsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9.oGFne1GGND70_iOFEPaVJbmXI48xQwlytaRi_whsuwA
+
+
+###
+POST http://localhost:5208/api/Auth/createorder/
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjZmZTMzNDI0LTE5OTYtNGVmMC1iMGQxLTZkOTJiMzM3ZWY4YiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpZGVyMUBleGFtcGxlLmNvbSIsIk9yZ0lkIjoiYWQ4ZWEzOGMtMzZjMi00OGU5LWI2ZDgtNTU4ZWM0ZDllZThiIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiUmlkZXIiLCJleHAiOjE3NTY4ODI0MTcsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9.tjJQ4U1taSeWOqjQg1Fvoh19pO48xV8wsfwbLrKu73I
+
+{
+  "organizationId": "AD8EA38C-36C2-48E9-B6D8-558EC4D9EE8B",
+  "orderDetails":"2 chips 1 peps",
+  "pickUpLocation": {
+    "address":"test address",
+    "latitude":"22.22",
+    "longtitude":"55.55"
+
+  },
+  "dropOffLocation":  {
+    "address":"test address",
+    "latitude":"22.22",
+    "longtitude":"55.55"
+
+  }
+}
+
+###
+POST http://localhost:5208/api/Auth/zones/
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjZmZTMzNDI0LTE5OTYtNGVmMC1iMGQxLTZkOTJiMzM3ZWY4YiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpZGVyMUBleGFtcGxlLmNvbSIsIk9yZ0lkIjoiYWQ4ZWEzOGMtMzZjMi00OGU5LWI2ZDgtNTU4ZWM0ZDllZThiIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiUmlkZXIiLCJleHAiOjE3NTY4ODI0MTcsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9.tjJQ4U1taSeWOqjQg1Fvoh19pO48xV8wsfwbLrKu73I
+
+{
+    "name": "Central Zone",
+    "wktPolygon": "POLYGON((0 0, 0 50, 50 50, 50 0, 0 0))"
+    
+}
+
+###
+GET http://localhost:5208/api/Auth/getzone/ABC3A8D5-0621-4024-8106-BC51F2D4B88B
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjZmZTMzNDI0LTE5OTYtNGVmMC1iMGQxLTZkOTJiMzM3ZWY4YiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpZGVyMUBleGFtcGxlLmNvbSIsIk9yZ0lkIjoiYWQ4ZWEzOGMtMzZjMi00OGU5LWI2ZDgtNTU4ZWM0ZDllZThiIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiUmlkZXIiLCJleHAiOjE3NTY4ODI0MTcsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9.tjJQ4U1taSeWOqjQg1Fvoh19pO48xV8wsfwbLrKu73I
+
+
+
 
 
 
