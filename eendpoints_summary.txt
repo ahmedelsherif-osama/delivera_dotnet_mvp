@@ -20,13 +20,14 @@ PUT /order/{id}/location → add rider location update
 POST /organization → create org (orgowner or superadmin)
 
 PUT /approveOrganization/{orgId} → superadmin approves org
+GET /organizations → list all orgs (optional filters)
+
 
 
 Organization:
 
 
 
-GET /organizations → list all orgs (optional filters)
 
 
 

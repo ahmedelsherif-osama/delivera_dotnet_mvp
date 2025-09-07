@@ -51,6 +51,30 @@ public class AuthController : ControllerBase
         return Ok(organizations);
     }
 
+    [HttpPatch("updateOrderStatus")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateOrderStatusRequest updateStatusRequest)
+    {
+        var order = await _context.Orders.FirstOrDefaultAsync<Order>(o => o.Id == updateStatusRequest.OrderId);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        if (order == null)
+        {
+            return NotFound("Order not found!");
+        }
+        if (updateStatusRequest.Status == OrderStatus.Canceled || updateStatusRequest.Status == OrderStatus.Canceled)
+        {
+            if (role == OrganizationRole.Rider.ToString())
+            {
+                return Unauthorized("Riders cannot remove orders, please contact support!");
+            }
+        }
+        order.Status = updateStatusRequest.Status;
+
+        await _context.SaveChangesAsync();
+        return Ok(order);
+
+    }
+
 
     // DTO for update requests
     public record UpdateLocationRequest(double Latitude, double Longitude);
