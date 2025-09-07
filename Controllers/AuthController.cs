@@ -12,13 +12,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Delivera.Services;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
+
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Drawing.Printing;
+using System.Text.Json;
 
 namespace Delivera.Controllers;
 
@@ -31,14 +30,84 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _config;
     private readonly DeliveraDbContext _context;
 
-    private readonly SessionManager _sessionManager;
 
     public AuthController(DeliveraDbContext context, IConfiguration config)
     {
         _context = context;
         _config = config;
     }
-        
+
+    // DTO for update requests
+    public record UpdateLocationRequest(double Latitude, double Longitude);
+
+    /// <summary>
+    /// Rider updates location (creates session if not existing).
+    /// </summary>
+    [HttpPut("update")]
+    public IActionResult UpdateLocation([FromBody] UpdateLocationRequest req)
+    {
+        var riderIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        Console.WriteLine(riderIdStr);
+        if (string.IsNullOrEmpty(riderIdStr))
+            return Unauthorized("Rider ID missing in token");
+
+        var riderId = Guid.Parse(riderIdStr);
+
+        var session = _context.RiderSessions.FirstOrDefault(s => s.RiderId == riderId && s.Status != SessionStatus.Completed);
+
+        if (session == null)
+        {
+            return BadRequest("No active session for this rider!");
+        }
+
+        var point = new NetTopologySuite.Geometries.Point(req.Longitude, req.Latitude);
+
+        var zone = _context.Zones
+    .AsEnumerable() // forces evaluation in memory
+    .FirstOrDefault(z => z.Area.Contains(point));
+
+
+
+        if (zone == null)
+        {
+            return BadRequest("Rider our of zone!");
+        }
+
+        session.Latitude = req.Latitude;
+        session.Longitude = req.Longitude;
+        session.ZoneId = zone.Id;
+        session.LastUpdated = DateTime.Now;
+
+        _context.SaveChanges();
+
+        return Ok(new { message = "Location updated", riderId });
+    }
+
+    /// <summary>
+    /// Rider goes offline (end session).
+    /// </summary>
+    [HttpPut("end")]
+    public IActionResult EndSession()
+    {
+        var riderIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(riderIdStr))
+            return Unauthorized("Rider ID missing in token");
+
+        var riderId = Guid.Parse(riderIdStr);
+        var session = _context.RiderSessions.FirstOrDefault(s => s.RiderId == riderId && s.Status != SessionStatus.Completed);
+        if (session == null)
+        {
+            return BadRequest("No active session for this rider!");
+        }
+        session.Status = SessionStatus.Completed;
+        session.LastUpdated = DateTime.Now;
+        _context.SaveChanges();
+
+
+
+        return Ok(new { message = "Session ended", riderId });
+    }
+
     [Authorize]
     [HttpGet("getzone/{id}")]
     public async Task<IActionResult> GetZone(Guid id)
@@ -49,21 +118,21 @@ public class AuthController : ControllerBase
         var orgId = User.FindFirstValue("OrgId");
 
 
-    if (string.IsNullOrEmpty(userId)) return Unauthorized("Invalid token");
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("Invalid token");
 
-    if (role == OrganizationRole.Rider.ToString() || role == OrganizationRole.Support.ToString())
-        return Unauthorized("This user type cannot access zones");
+        if (role == OrganizationRole.Rider.ToString() || role == OrganizationRole.Support.ToString())
+            return Unauthorized("This user type cannot access zones");
 
-    // if (orgId != orderRequest.OrganizationId.ToString())
-    //     return Unauthorized("User does not belong to this organization");
+        // if (orgId != orderRequest.OrganizationId.ToString())
+        //     return Unauthorized("User does not belong to this organization");
         var zone = await _context.Zones.FindAsync(id);
         if (zone == null) return NotFound();
         var response = new ZoneResponse
         {
-        Id = zone.Id,
-        Name = zone.Name,
-        WktPolygon = zone.Area.AsText() // Convert Geometry to WKT string
-    
+            Id = zone.Id,
+            Name = zone.Name,
+            WktPolygon = zone.Area.AsText() // Convert Geometry to WKT string
+
         };
 
         return Ok(response);
@@ -73,7 +142,7 @@ public class AuthController : ControllerBase
     [HttpPost("zones")]
     public async Task<IActionResult> CreateZone([FromBody] CreateZoneRequest dto)
     {
-             //token check
+        //token check
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = User.FindFirstValue(ClaimTypes.Email);
         var role = User.FindFirstValue(ClaimTypes.Role);
@@ -82,13 +151,13 @@ public class AuthController : ControllerBase
 
 
 
-    if (string.IsNullOrEmpty(userId)) return Unauthorized("Invalid token");
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("Invalid token");
 
-    if (role == OrganizationRole.Rider.ToString() || role == OrganizationRole.Support.ToString())
-        return Unauthorized("This user type cannot create zones");
+        if (role == OrganizationRole.Rider.ToString() || role == OrganizationRole.Support.ToString())
+            return Unauthorized("This user type cannot create zones");
 
-    // if (orgId != orderRequest.OrganizationId.ToString())
-    //     return Unauthorized("User does not belong to this organization");
+        // if (orgId != orderRequest.OrganizationId.ToString())
+        //     return Unauthorized("User does not belong to this organization");
 
         var wktReader = new WKTReader();
         Geometry area;
@@ -118,74 +187,119 @@ public class AuthController : ControllerBase
         await _context.SaveChangesAsync();
         var response = new ZoneResponse
         {
-        Id = zone.Id,
-        Name = zone.Name,
-        WktPolygon = zone.Area.AsText()
+            Id = zone.Id,
+            Name = zone.Name,
+            WktPolygon = zone.Area.AsText()
         };
 
         return CreatedAtAction(nameof(GetZone), new { id = zone.Id }, response);
     }
 
-    [Authorize]
-[HttpPost("assignRider")]
-public ActionResult AssignRider(Guid orderId)
-{
-    // ✅ 1. Find order
-    var order = _context.Orders.Find(orderId);
-    if (order == null) return NotFound(new { error = "Order not found" });
 
-    // ✅ 2. Check user permissions
-    var role = User.FindFirstValue("role");
-    if (role != OrganizationRole.Owner.ToString() &&
-        role != OrganizationRole.Admin.ToString())
+    public RiderSession? GetNearestActiveRider(double latitude, double longitude, Guid zoneId)
     {
-        return Forbid("Only admins or owners can assign riders");
+        var sessions = _context.RiderSessions.Where(s => s.ZoneId == zoneId).ToList<RiderSession>();
+
+        return sessions
+            .OrderBy(s => Distance(latitude, longitude, s.Latitude, s.Longitude))
+            .FirstOrDefault();
     }
 
-    // ✅ 3. Determine zone (MVP = naive approach)
-    var pickupPoint = new NetTopologySuite.Geometries.Point(
-        order.PickUpLocation.Latitude,
-        order.PickUpLocation.Longitude
-    );
-
-    var zone = _context.Zones.FirstOrDefault(z => z.Area.Contains(pickupPoint));
-    if (zone == null)
-        return NotFound(new { error = "Pickup location not in any zone" });
-
-    // ✅ 4. Find nearest rider in that zone
-    var rider = _sessionManager.GetNearestActiveRider(
-        order.PickUpLocation.Latitude,
-        order.PickUpLocation.Longitude,
-        zone.Name
-    );
-
-    if (rider == null)
-        return NotFound(new { error = "No active rider available in this zone" });
-
-    // ✅ 5. Update order + rider
-    order.Status = OrderStatus.Assigned;
-    order.RiderId = rider.RiderId; // 🔴 for MVP only, better to store RiderId as Guid
-    rider.ActiveOrders.Add(order.Id);
-
-    _context.SaveChanges();
-
-    return Ok(new
+    private double Distance(double lat1, double lon1, double lat2, double lon2)
     {
-        message = "Rider assigned",
-        riderId = rider.RiderId
-    });
-}
+        // Haversine formula
+        double R = 6371e3; // earth radius in meters
+        double φ1 = lat1 * Math.PI / 180;
+        double φ2 = lat2 * Math.PI / 180;
+        double Δφ = (lat2 - lat1) * Math.PI / 180;
+        double Δλ = (lon2 - lon1) * Math.PI / 180;
+
+        double a = Math.Sin(Δφ / 2) * Math.Sin(Δφ / 2) +
+                   Math.Cos(φ1) * Math.Cos(φ2) *
+                   Math.Sin(Δλ / 2) * Math.Sin(Δλ / 2);
+        double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+        return R * c;
+    }
+
+
+    [Authorize]
+    [HttpPost("assignRider")]
+    public async Task<ActionResult> AssignRider(Guid orderId)
+    {
+        // ✅ 1. Find order
+        var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+        if (order == null) return NotFound(new { error = "Order not found" });
+        if (order.PickUpLocation == null)
+            return BadRequest("Order has no pickup location");
+        // ✅ 2. Check user permissions
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        if (role != OrganizationRole.Owner.ToString() &&
+            role != OrganizationRole.Admin.ToString())
+        {
+            return Forbid("Only admins or owners can assign riders");
+        }
+
+        // ✅ 3. Determine zone (MVP = naive approach)
+        var pickupPoint = new NetTopologySuite.Geometries.Point(
+               order.PickUpLocation.Longitude, // X
+    order.PickUpLocation.Latitude   // Y
+        );
+
+        var zones = await _context.Zones.ToListAsync();
+        Console.WriteLine(pickupPoint);
+
+        zones.ForEach(z =>
+        {
+            Console.WriteLine($"${z.Area} ${z.Id} ${z.WktPolygon}");
+        });
+
+        var zone = zones.FirstOrDefault(z => z.Area != null && z.Area.Contains(pickupPoint));
+        if (zone == null)
+        {
+            return NotFound(new { error = "Pickup location not in any zone" });
+        }
+        // ...
+        Console.WriteLine(JsonSerializer.Serialize(order, new JsonSerializerOptions { WriteIndented = true }));
+        Console.WriteLine($"Zone: {zone?.Name}, Polygon: {zone?.WktPolygon}");
+        Console.WriteLine(role);
+        Console.WriteLine(order.PickUpLocation.Latitude);
+        Console.WriteLine(order.PickUpLocation.Longitude);
+        Console.WriteLine(zone!.Name);
+        // ✅ 4. Find nearest rider in that zone
+        var rider = GetNearestActiveRider(
+            order.PickUpLocation.Latitude,
+            order.PickUpLocation.Longitude,
+            zone.Id
+        );
+
+        if (rider == null)
+            return NotFound(new { error = "No active rider available in this zone" });
+
+        // ✅ 5. Update order + rider
+        order.Status = OrderStatus.Assigned;
+        order.RiderId = rider.RiderId; // 🔴 for MVP only, better to store RiderId as Guid
+        rider.ActiveOrders.Add(order.Id);
+
+        _context.SaveChanges();
+
+        return Ok(new
+        {
+            message = "Rider assigned",
+            riderId = rider.RiderId
+        });
+    }
 
 
     [Authorize]
     [HttpPost("createOrder")]
     public async Task<ActionResult> CreateOrder([FromBody] OrderRequest orderRequest)
     {
-        if (orderRequest.OrderDetails == null || orderRequest.OrderDetails=="")
+        if (orderRequest.OrderDetails == null || orderRequest.OrderDetails == "")
         {
             return BadRequest("Order details are required!");
         }
-        if (orderRequest.OrganizationId == null )
+        if (orderRequest.OrganizationId == null)
         {
             return BadRequest("Organization Id is required!");
         }
@@ -198,31 +312,31 @@ public ActionResult AssignRider(Guid orderId)
             return BadRequest("DropOff location is required!");
         }
 
-     //token check
+        //token check
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = User.FindFirstValue(ClaimTypes.Email);
         var role = User.FindFirstValue(ClaimTypes.Role);
         var orgId = User.FindFirstValue("OrgId");
 
 
-    if (string.IsNullOrEmpty(userId)) return Unauthorized("Invalid token");
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("Invalid token");
 
-    if (role == OrganizationRole.Rider.ToString())
-        return Unauthorized("Riders cannot create orders");
+        if (role == OrganizationRole.Rider.ToString())
+            return Unauthorized("Riders cannot create orders");
 
-    if (orgId != orderRequest.OrganizationId.ToString())
-        return Unauthorized("User does not belong to this organization");
+        if (orgId != orderRequest.OrganizationId.ToString())
+            return Unauthorized("User does not belong to this organization");
 
 
-    // Validate input
-    if (string.IsNullOrWhiteSpace(orderRequest.OrderDetails))
-        return BadRequest("Order details are required!");
+        // Validate input
+        if (string.IsNullOrWhiteSpace(orderRequest.OrderDetails))
+            return BadRequest("Order details are required!");
 
-    if (orderRequest.PickUpLocation == null)
-        return BadRequest("Pickup location is required!");
+        if (orderRequest.PickUpLocation == null)
+            return BadRequest("Pickup location is required!");
 
-    if (orderRequest.DropOffLocation == null)
-        return BadRequest("DropOff location is required!");
+        if (orderRequest.DropOffLocation == null)
+            return BadRequest("DropOff location is required!");
 
         Order order = new Order
         {
@@ -474,9 +588,22 @@ public ActionResult AssignRider(Guid orderId)
         await _context.SaveChangesAsync();
         var claims = new List<Claim>
         {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // Rider/User ID
             new Claim(ClaimTypes.Name, user.Username),
             new Claim("Role", user.GlobalRole.ToString())
         };
+
+
+        // after validating user
+        if (user.OrganizationRole == OrganizationRole.Rider)
+        {
+            var session = new RiderSession
+            {
+                RiderId = user.Id
+            };
+            _context.RiderSessions.Add(session);
+            await _context.SaveChangesAsync();
+        }
 
 
         return Ok(new
@@ -573,10 +700,10 @@ public ActionResult AssignRider(Guid orderId)
     }
 
 
-private string GenerateJwtToken(BaseUser user)
-{
-    var claims = new[]
+    private string GenerateJwtToken(BaseUser user)
     {
+        var claims = new[]
+        {
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim(ClaimTypes.Email, user.Email),
         new Claim("OrgId", user.OrganizationId?.ToString() ?? ""),
@@ -584,17 +711,17 @@ private string GenerateJwtToken(BaseUser user)
 
     };
 
-    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-    var token = new JwtSecurityToken(
-        issuer: _config["Jwt:Issuer"],
-        audience: _config["Jwt:Audience"],
-        claims: claims,
-        expires: DateTime.UtcNow.AddHours(2),
-        signingCredentials: creds
-    );
+        var token = new JwtSecurityToken(
+            issuer: _config["Jwt:Issuer"],
+            audience: _config["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(2),
+            signingCredentials: creds
+        );
 
-    return new JwtSecurityTokenHandler().WriteToken(token);
-}
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 }

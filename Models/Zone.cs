@@ -10,6 +10,7 @@ namespace Delivera.Models
         // Polygon representing the zone
         public string WktPolygon { get; set; } = null!; // WKT string for the zone area
         public Geometry Area { get; set; } = null!; // <-- Add this
+        
         public Guid OrganizationId {get; set;}
         public Organization Org {get; set;}
         }

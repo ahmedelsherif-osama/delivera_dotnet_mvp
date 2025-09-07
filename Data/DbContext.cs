@@ -13,6 +13,7 @@ namespace Delivera.Data
     public class DeliveraDbContext : DbContext
     {
         public DeliveraDbContext(DbContextOptions<DeliveraDbContext> options) : base(options) { }
+
         public DbSet<BaseUser> Users { get; set; } = null!;
         public DbSet<Organization> Organizations { get; set; } = null!;
         public DbSet<Permission> Permissions { get; set; } = null!;
@@ -23,6 +24,8 @@ namespace Delivera.Data
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Zone> Zones { get; set; }
+        public DbSet<RiderSession> RiderSessions { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -54,11 +57,11 @@ namespace Delivera.Data
            .HasForeignKey(r => r.UserId)
            .OnDelete(DeleteBehavior.Cascade);
 
-           modelBuilder.Entity<Zone>()
-           .HasOne(z => z.Org)
-           .WithMany()
-           .HasForeignKey(z => z.OrganizationId)
-           .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Zone>()
+            .HasOne(z => z.Org)
+            .WithMany()
+            .HasForeignKey(z => z.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<BaseUser>()
             .HasIndex(u => u.Email)
@@ -88,12 +91,14 @@ namespace Delivera.Data
 
             modelBuilder.Entity<Order>().OwnsOne(o => o.PickUpLocation);
             modelBuilder.Entity<Order>().OwnsOne(o => o.DropOffLocation);
-             modelBuilder.Entity<Zone>()
-    .Property(z => z.Area)
-    .HasConversion(
-        v => v.AsText(),                // Polygon -> WKT string
-        v => new WKTReader().Read(v) as Polygon // WKT string -> Polygon
-    );
+            modelBuilder.Entity<Zone>()
+   .Property(z => z.Area)
+   .HasConversion(
+       v => v.AsText(),                // Polygon -> WKT string
+       v => new WKTReader().Read(v) as Polygon // WKT string -> Polygon
+   );
+
+            modelBuilder.Entity<RiderSession>().HasOne(s => s.Zone).WithMany().HasForeignKey(s => s.ZoneId).OnDelete(DeleteBehavior.Restrict);
 
 
 
@@ -107,7 +112,7 @@ namespace Delivera.Data
             return Convert.ToBase64String(bytes);
         }
 
-       
+
 
 
     }

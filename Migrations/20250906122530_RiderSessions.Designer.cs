@@ -3,6 +3,7 @@ using System;
 using Delivera.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Delivera.Migrations
 {
     [DbContext(typeof(DeliveraDbContext))]
-    partial class DeliveraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250906122530_RiderSessions")]
+    partial class RiderSessions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.19");
@@ -109,9 +112,9 @@ namespace Delivera.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("d87d1db6-9321-4323-9af1-6157f85d2744"),
-                            ApprovedAt = new DateTime(2025, 9, 6, 18, 3, 48, 57, DateTimeKind.Utc).AddTicks(2485),
-                            CreatedAt = new DateTime(2025, 9, 6, 18, 3, 48, 57, DateTimeKind.Utc).AddTicks(2490),
+                            Id = new Guid("3b5afa9d-388e-4548-960a-7d0c73f4ea92"),
+                            ApprovedAt = new DateTime(2025, 9, 6, 12, 25, 29, 499, DateTimeKind.Utc).AddTicks(8984),
+                            CreatedAt = new DateTime(2025, 9, 6, 12, 25, 29, 499, DateTimeKind.Utc).AddTicks(8988),
                             Email = "superadmin@delivera.com",
                             FirstName = "System",
                             GlobalRole = 0,
@@ -282,12 +285,11 @@ namespace Delivera.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid?>("ZoneId")
+                    b.Property<string>("Zone")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ZoneId");
 
                     b.ToTable("RiderSessions");
                 });
@@ -451,16 +453,6 @@ namespace Delivera.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Delivera.Models.RiderSession", b =>
-                {
-                    b.HasOne("Delivera.Models.Zone", "Zone")
-                        .WithMany()
-                        .HasForeignKey("ZoneId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Zone");
                 });
 
             modelBuilder.Entity("Delivera.Models.RolePermission", b =>

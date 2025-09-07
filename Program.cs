@@ -6,14 +6,12 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Delivera.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 
-// in Program.cs
-builder.Services.AddSingleton<SessionManager>();
+
 
 
 
