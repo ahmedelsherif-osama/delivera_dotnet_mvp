@@ -18,6 +18,7 @@ using NetTopologySuite.IO;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Drawing.Printing;
 using System.Text.Json;
+using NetTopologySuite.Utilities;
 
 namespace Delivera.Controllers;
 
@@ -137,6 +138,41 @@ public class AuthController : ControllerBase
 
         return Ok(response);
     }
+
+
+    [HttpPatch("superadmin/approveOrg/{organizationId}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> ApproveOrganization(Guid organizationId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var role = User.FindFirstValue("Role");
+        // var role2 = User.FindFirstValue(ClaimTypes.Role);
+
+        foreach (var claim in User.Claims)
+        {
+            Console.WriteLine($"{claim.Type}: {claim.Value}");
+        }
+        Console.WriteLine($"role 1: ${role} - role 2: $");
+        if (role != GlobalRole.SuperAdmin.ToString())
+        {
+            return Unauthorized("Only administrator can approve an organization!");
+        }
+
+        var org = await _context.Organizations.FirstOrDefaultAsync(o => o.Id == organizationId);
+        if (org == null)
+        {
+            return NotFound("Organization not found!");
+        }
+
+        org.IsApproved = true;
+
+        await _context.SaveChangesAsync();
+
+        return Ok("Organization approved successfully!");
+
+    }
+
 
     [Authorize]
     [HttpPost("zones")]
@@ -621,7 +657,7 @@ public class AuthController : ControllerBase
 
     }
 
-    [HttpPost("approve/superadmin/{userId:guid}")]
+    [HttpPut("approve/superadmin/{userId:guid}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> ApproveBySuperAdmin(Guid userId)
     {
@@ -655,7 +691,7 @@ public class AuthController : ControllerBase
     }
 
 
-    [HttpPost("approve/orgowner/{userId:guid}")]
+    [HttpPut("approve/orgowner/{userId:guid}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> ApproveByOrgOwner(Guid userId)
     {
@@ -707,7 +743,8 @@ public class AuthController : ControllerBase
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim(ClaimTypes.Email, user.Email),
         new Claim("OrgId", user.OrganizationId?.ToString() ?? ""),
-        new Claim(ClaimTypes.Role, user.OrganizationRole?.ToString() ?? "")
+        new Claim(ClaimTypes.Role, user.OrganizationRole?.ToString() ?? ""),
+        new Claim("Role", user.GlobalRole.ToString() ?? "")
 
     };
 

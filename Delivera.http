@@ -23,10 +23,11 @@ Content-Type: application/json
 Accept: application/json
 
 {
+  "userName": "superadmin",
+  "password": "ChangeMe123!"
   # "userName": "blablabla2",
-  "userName": "rider1",
-    "password": "changemE@123"
-      # "password": "ChangeMe123!"
+  # "userName": "rider1",
+    # "password": "changemE@123"
 
 
     
@@ -36,10 +37,10 @@ Accept: application/json
 ###
 
 
-POST http://localhost:5208/api/Auth/approve/superadmin/0E7696FA-813A-4E83-B1E8-9D05C2A1EB2C
+PUT http://localhost:5208/api/Auth/approve/superadmin/8B7D87AF-8EFE-4B2D-9B40-A95B80A6DB62
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6Ijc3MGJhOTllLTljNDUtNGRkNy1hYTdmLWRiY2FkNTg2NTEyMyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJzdXBlcmFkbWluIiwiUm9sZSI6IlN1cGVyQWRtaW4iLCJleHAiOjE3NTY1MjkwNzEsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9._TNX247EtBOT9bCsUO_5CCu3qDTSd7EfZaaoQJBmE1A
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImQ4N2QxZGI2LTkzMjEtNDMyMy05YWYxLTYxNTdmODVkMjc0NCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InN1cGVyYWRtaW5AZGVsaXZlcmEuY29tIiwiT3JnSWQiOiIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiIiLCJSb2xlIjoiU3VwZXJBZG1pbiIsImV4cCI6MTc1NzIyODQzNCwiaXNzIjoiRGVsaXZlcmEiLCJhdWQiOiJEZWxpdmVyYVVzZXJzIn0.VDD5rrflUqr4bpyV-GYpr8A4wcuN6RbV-xYdJOjE1Xs
 
 
 ###
@@ -109,7 +110,19 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hc
     "longitude":55.2432909777042
     
 }
+###
+PUT http://localhost:5208/api/Auth/end/
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjZmZTMzNDI0LTE5OTYtNGVmMC1iMGQxLTZkOTJiMzM3ZWY4YiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpZGVyMUBleGFtcGxlLmNvbSIsIk9yZ0lkIjoiYWQ4ZWEzOGMtMzZjMi00OGU5LWI2ZDgtNTU4ZWM0ZDllZThiIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiUmlkZXIiLCJleHAiOjE3NTcyMTE4NzMsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9.pUatlnQlPwvnPg11EPKqWFHPXaGVSuszaKWoDAbI6K4
 
+
+
+###
+PATCH http://localhost:5208/api/Auth/superadmin/approveOrg/CC333179-D604-45EB-8867-DE81D098480A
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImQ4N2QxZGI2LTkzMjEtNDMyMy05YWYxLTYxNTdmODVkMjc0NCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InN1cGVyYWRtaW5AZGVsaXZlcmEuY29tIiwiT3JnSWQiOiIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiIiLCJSb2xlIjoiU3VwZXJBZG1pbiIsImV4cCI6MTc1NzIyOTM1MiwiaXNzIjoiRGVsaXZlcmEiLCJhdWQiOiJEZWxpdmVyYVVzZXJzIn0.XqC9n2UWROuIMQ_hLINSCYyQ0nZbSkEBvCGMAqAz6t4
 
 
 
