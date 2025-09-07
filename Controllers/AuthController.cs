@@ -38,6 +38,20 @@ public class AuthController : ControllerBase
         _config = config;
     }
 
+
+    [Authorize]
+    [HttpGet("organizations")]
+    public async Task<IActionResult> GetOrganizations()
+    {
+        var organizations = await _context.Organizations.ToListAsync();
+        if (organizations.IsNullOrEmpty())
+        {
+            return NotFound("No organizations were found!");
+        }
+        return Ok(organizations);
+    }
+
+
     // DTO for update requests
     public record UpdateLocationRequest(double Latitude, double Longitude);
 
