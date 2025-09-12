@@ -12,7 +12,10 @@ namespace Delivera.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        public string OrderDetails { get; set;} = null!;
+        public string OrderDetails { get; set; } = null!;
+
+        public Guid? RiderSessionId { get; set; }
+        public RiderSession? RiderSession { get; set; }
     }
 
     public class Location

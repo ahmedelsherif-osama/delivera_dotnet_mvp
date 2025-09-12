@@ -19,6 +19,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Drawing.Printing;
 using System.Text.Json;
 using NetTopologySuite.Utilities;
+using Microsoft.Identity.Client;
+using System.Threading.Tasks.Dataflow;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Delivera.Controllers;
 
@@ -38,6 +41,89 @@ public class AuthController : ControllerBase
         _config = config;
     }
 
+    [HttpGet("orders/")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetAllOrgOrders()
+    {
+        var orgId = User.FindFirstValue("OrgId");
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        if (role == OrganizationRole.Rider.ToString())
+        {
+            return Unauthorized("Access Denied!");
+        }
+        if (!Guid.TryParse(orgId, out var orgGuid))
+        {
+            return BadRequest("Organization Id is in wrong format!");
+        }
+        var orders = await _context.Orders.Where(o => o.OrganizationId == orgGuid).ToListAsync();
+
+        if (orders.IsNullOrEmpty())
+        {
+            return Ok("No orders yet!");
+        }
+
+        return Ok(orders);
+    }
+
+    [HttpGet("orders/superadmin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetAllOrdersAdmin()
+    {
+        var role = User.FindFirstValue("Role");
+        if (role != GlobalRole.SuperAdmin.ToString())
+        {
+            return Unauthorized("Access Denied");
+        }
+        var orders = await _context.Orders.ToListAsync();
+        return Ok(orders);
+    }
+
+    [HttpGet("orders/own")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetOwnOrders()
+    {
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        if (role != OrganizationRole.Rider.ToString())
+        {
+            return Unauthorized("This endpoint is for riders only!");
+        }
+        var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        Console.WriteLine("orders own rider id " + riderId);
+
+
+        var orders = _context.Orders.Where(o => o.RiderId.ToString()!.ToUpper() == riderId!.ToUpper());
+
+        if (orders.IsNullOrEmpty())
+        {
+            return Ok("You have no orders yet!");
+
+        }
+        return Ok(orders);
+
+    }
+
+
+    [HttpGet("orders/{orderId}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetOrder(Guid orderId)
+    {
+        var orgId = User.FindFirstValue("OrgId");
+        var order = await _context.Orders.FirstOrDefaultAsync<Order>(o => o.Id == orderId);
+
+        if (order == null)
+        {
+            return NotFound("Order not found!");
+        }
+
+        if (orgId != order.OrganizationId.ToString())
+        {
+            return Unauthorized();
+        }
+
+
+        return Ok(order);
+
+    }
 
     [Authorize]
     [HttpGet("organizations")]
@@ -353,7 +439,7 @@ public class AuthController : ControllerBase
         // ✅ 5. Update order + rider
         order.Status = OrderStatus.Assigned;
         order.RiderId = rider.RiderId; // 🔴 for MVP only, better to store RiderId as Guid
-        rider.ActiveOrders.Add(order.Id);
+        rider.ActiveOrders.Add(order);
 
         _context.SaveChanges();
 

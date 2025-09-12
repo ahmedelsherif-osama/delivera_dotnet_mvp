@@ -3,6 +3,7 @@ using System;
 using Delivera.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Delivera.Migrations
 {
     [DbContext(typeof(DeliveraDbContext))]
-    partial class DeliveraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250908094837_UpdateSessionOrderRelation4")]
+    partial class UpdateSessionOrderRelation4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.19");
@@ -153,9 +156,6 @@ namespace Delivera.Migrations
                     b.Property<Guid?>("RiderSessionId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("RiderSessionId1")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
@@ -165,8 +165,6 @@ namespace Delivera.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("RiderSessionId");
-
-                    b.HasIndex("RiderSessionId1");
 
                     b.ToTable("Orders");
                 });
@@ -362,12 +360,7 @@ namespace Delivera.Migrations
                 {
                     b.HasOne("Delivera.Models.RiderSession", null)
                         .WithMany("ActiveOrders")
-                        .HasForeignKey("RiderSessionId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Delivera.Models.RiderSession", "RiderSession")
-                        .WithMany()
-                        .HasForeignKey("RiderSessionId1");
+                        .HasForeignKey("RiderSessionId");
 
                     b.OwnsOne("Delivera.Models.Location", "DropOffLocation", b1 =>
                         {
@@ -426,8 +419,6 @@ namespace Delivera.Migrations
 
                     b.Navigation("PickUpLocation")
                         .IsRequired();
-
-                    b.Navigation("RiderSession");
                 });
 
             modelBuilder.Entity("Delivera.Models.Organization", b =>

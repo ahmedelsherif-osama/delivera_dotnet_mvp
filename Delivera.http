@@ -23,10 +23,13 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  # "userName": "superadmin",
-  # "password": "ChangeMe123!",
-    "userName": "rider1",
-        "password": "changemE@123"
+  # "userName":"blablabla3",
+  "userName": "superadmin",
+  "password": "ChangeMe123!"
+          # "password": "changemE@123"
+
+  
+    # "userName": "rider1",
 
 
   # "userName": "blablabla2",
@@ -145,4 +148,22 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hc
   "status":"Canceled",
   "orderId":"68F84BED-BC41-47B1-87E2-D8D7C256E7CF"
 }
+
+###
+GET http://localhost:5208/api/Auth/orders/68F84BED-BC41-47B1-87E2-D8D7C256E7CF
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjZmZTMzNDI0LTE5OTYtNGVmMC1iMGQxLTZkOTJiMzM3ZWY4YiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InJpZGVyMUBleGFtcGxlLmNvbSIsIk9yZ0lkIjoiYWQ4ZWEzOGMtMzZjMi00OGU5LWI2ZDgtNTU4ZWM0ZDllZThiIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiUmlkZXIiLCJSb2xlIjoiT3JnVXNlciIsImV4cCI6MTc1NzMyNjQ5NSwiaXNzIjoiRGVsaXZlcmEiLCJhdWQiOiJEZWxpdmVyYVVzZXJzIn0.cuV07EV2zwjZHbB7jmTCPDWNdwDaUI6i6atcmPR0XYg
+
+###
+GET http://localhost:5208/api/Auth/orders/
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjhiN2Q4N2FmLThlZmUtNGIyZC05YjQwLWE5NWI4MGE2ZGI2MiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3QxMkBleGFtcGxlLmNvbSIsIk9yZ0lkIjoiZDc1YjE1ZmEtNmY5YS00Mjk3LWEzNmUtODBmZTc0YjMxZmFjIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiT3duZXIiLCJSb2xlIjoiT3JnVXNlciIsImV4cCI6MTc1NzMyODMzOSwiaXNzIjoiRGVsaXZlcmEiLCJhdWQiOiJEZWxpdmVyYVVzZXJzIn0.13lKm81ifm4YkgzxZXl-XoTkmcSfgRMLw5CSZ8hC48E
+
+###
+GET http://localhost:5208/api/Auth/orders/superadmin/
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImQ4N2QxZGI2LTkzMjEtNDMyMy05YWYxLTYxNTdmODVkMjc0NCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InN1cGVyYWRtaW5AZGVsaXZlcmEuY29tIiwiT3JnSWQiOiIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiIiLCJSb2xlIjoiU3VwZXJBZG1pbiIsImV4cCI6MTc1NzMyODg0NiwiaXNzIjoiRGVsaXZlcmEiLCJhdWQiOiJEZWxpdmVyYVVzZXJzIn0.B8QEgIqXocHUDv9QkBUw22U_lpT5ZE_4PUdO7WhM18Y
 

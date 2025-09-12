@@ -21,6 +21,11 @@ POST /organization → create org (orgowner or superadmin)
 
 PUT /approveOrganization/{orgId} → superadmin approves org
 GET /organizations → list all orgs (optional filters)
+PATCH /order/{id}/status → update order status
+GET /orders/{id} → get order details with locations
+GET /orders/ → get all orders - not for riders
+GET /orders/superadmin/ → get all orders - for superadmin only
+
 
 
 
@@ -31,10 +36,9 @@ Organization:
 
 
 
-PATCH /order/{id}/status → update order status
 
 
-GET /order/{id} → get order details with locations
+GET /orders/own/ → get own order history - for riders
 
 
 POST /notification → create notification

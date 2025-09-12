@@ -14,8 +14,7 @@ namespace Delivera.Models
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 
 
-
-        public List<Guid> ActiveOrders { get; set; } = new();
+        public ICollection<Order> ActiveOrders { get; set; } = new List<Order>();
     }
     public enum SessionStatus
     {

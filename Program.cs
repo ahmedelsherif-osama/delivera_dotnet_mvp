@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-
+using System.Security.Cryptography;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,12 @@ builder.Services.AddDbContext<DeliveraDbContext>(options =>
 
 
 
+static string HashPassword(string password)
+{
+    using var sha = SHA256.Create();
+    var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+    return Convert.ToBase64String(bytes);
+}
 
 
 builder.Services.AddControllers()
@@ -53,6 +60,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -65,4 +74,30 @@ using (var scope = app.Services.CreateScope())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<DeliveraDbContext>();
+
+    var superAdminId = Guid.Parse("D87D1DB6-9321-4323-9AF1-6157F85D2744");
+
+    if (!context.Users.Any(u => u.Id == superAdminId))
+    {
+        var passwordHash = HashPassword("ChangeMe123!");
+        context.Users.Add(new BaseUser
+        {
+            Id = superAdminId,
+            Email = "superadmin@delivera.com",
+            Username = "superadmin",
+            PasswordHash = passwordHash,
+            GlobalRole = GlobalRole.SuperAdmin,
+            IsOrgOwnerApproved = true,
+            IsSuperAdminApproved = true,
+            FirstName = "System",
+            LastName = "Admin",
+            CreatedAt = DateTime.UtcNow
+        });
+        context.SaveChanges();
+    }
+}
 app.Run();
