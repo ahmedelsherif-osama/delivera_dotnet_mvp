@@ -31,6 +31,11 @@ namespace Delivera.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Order>()
+        .HasOne(o => o.CreatedByUser)
+        .WithMany() // or WithMany(u => u.Orders) if BaseUser has a collection
+        .HasForeignKey(o => o.CreatedById)
+        .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<RefreshToken>()
            .HasOne(r => r.User)
@@ -85,6 +90,8 @@ namespace Delivera.Data
     .WithMany(rs => rs.ActiveOrders)
     .HasForeignKey(o => o.RiderSessionId)
     .OnDelete(DeleteBehavior.SetNull);
+
+    
 
 
 

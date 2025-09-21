@@ -16,6 +16,9 @@ namespace Delivera.Models
 
         public Guid? RiderSessionId { get; set; }
         public RiderSession? RiderSession { get; set; }
+
+        public Guid CreatedById { get; set; }
+        public BaseUser CreatedByUser { get; set; }
     }
 
     public class Location

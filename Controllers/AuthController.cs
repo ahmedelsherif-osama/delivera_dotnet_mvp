@@ -34,11 +34,14 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _config;
     private readonly DeliveraDbContext _context;
 
+    private readonly INotificationService _notificationService;
 
-    public AuthController(DeliveraDbContext context, IConfiguration config)
+
+    public AuthController(DeliveraDbContext context, IConfiguration config, INotificationService notificationService)
     {
         _context = context;
         _config = config;
+        _notificationService = notificationService;
     }
 
     [HttpGet("orders/")]
@@ -154,9 +157,21 @@ public class AuthController : ControllerBase
                 return Unauthorized("Riders cannot remove orders, please contact support!");
             }
         }
+
         order.Status = updateStatusRequest.Status;
+        var message = $"Order {order.Id} {updateStatusRequest.Status}";
+        if (order.RiderId == null || order.RiderId.ToString() == "")
+        {
+            return BadRequest("Order must be assigned to a rider before status update");
+        }
+
+        await _notificationService.NotifyRiderAsync(order.RiderId.Value, message);
+        await _notificationService.NotifyOrderCreatorAsync(order, message);
 
         await _context.SaveChangesAsync();
+
+
+
         return Ok(order);
 
     }
@@ -384,14 +399,17 @@ public class AuthController : ControllerBase
 
 
     [Authorize]
-    [HttpPost("assignRider")]
+    [HttpPut("assignRider")]
     public async Task<ActionResult> AssignRider(Guid orderId)
     {
+        Console.WriteLine("within assign rider");
         // ✅ 1. Find order
         var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+        Console.WriteLine("found order");
         if (order == null) return NotFound(new { error = "Order not found" });
         if (order.PickUpLocation == null)
             return BadRequest("Order has no pickup location");
+
         // ✅ 2. Check user permissions
         var role = User.FindFirstValue(ClaimTypes.Role);
         if (role != OrganizationRole.Owner.ToString() &&
@@ -399,6 +417,9 @@ public class AuthController : ControllerBase
         {
             return Forbid("Only admins or owners can assign riders");
         }
+
+        Console.WriteLine("done with finding orders and permissions");
+
 
         // ✅ 3. Determine zone (MVP = naive approach)
         var pickupPoint = new NetTopologySuite.Geometries.Point(
@@ -408,6 +429,8 @@ public class AuthController : ControllerBase
 
         var zones = await _context.Zones.ToListAsync();
         Console.WriteLine(pickupPoint);
+        Console.WriteLine("Pickup point fine");
+
 
         zones.ForEach(z =>
         {
@@ -415,10 +438,13 @@ public class AuthController : ControllerBase
         });
 
         var zone = zones.FirstOrDefault(z => z.Area != null && z.Area.Contains(pickupPoint));
+        Console.WriteLine("Zone found 1");
+
         if (zone == null)
         {
             return NotFound(new { error = "Pickup location not in any zone" });
         }
+        Console.WriteLine("Zone found");
         // ...
         Console.WriteLine(JsonSerializer.Serialize(order, new JsonSerializerOptions { WriteIndented = true }));
         Console.WriteLine($"Zone: {zone?.Name}, Polygon: {zone?.WktPolygon}");
@@ -434,7 +460,7 @@ public class AuthController : ControllerBase
         );
 
         if (rider == null)
-            return NotFound(new { error = "No active rider available in this zone" });
+            return Ok(new { message = "No active rider available in this zone" });
 
         // ✅ 5. Update order + rider
         order.Status = OrderStatus.Assigned;
@@ -474,6 +500,7 @@ public class AuthController : ControllerBase
 
         //token check
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        Console.WriteLine($"what now {userId}");
         var email = User.FindFirstValue(ClaimTypes.Email);
         var role = User.FindFirstValue(ClaimTypes.Role);
         var orgId = User.FindFirstValue("OrgId");
@@ -504,13 +531,19 @@ public class AuthController : ControllerBase
             Status = OrderStatus.Created,
             PickUpLocation = orderRequest.PickUpLocation,
             DropOffLocation = orderRequest.DropOffLocation,
-            OrderDetails = orderRequest.OrderDetails
+            OrderDetails = orderRequest.OrderDetails,
+            CreatedById = Guid.Parse(userId),
+            RiderId = null
         };
         _context.Orders.Add(order);
 
         try
         {
             await _context.SaveChangesAsync();
+            var message = $"New order #{order.Id} created for Organization #{orgId}";
+            await _notificationService.NotifyOrderCreatorAsync(order, message);
+            await _notificationService.NotifyOrganizationOwnerAsync(Guid.Parse(orgId), message);
+            await _notificationService.NotifyOrganizationAdminAsync(Guid.Parse(orgId), message);
         }
         catch (DbUpdateException ex)
         {
@@ -520,6 +553,23 @@ public class AuthController : ControllerBase
 
         return Ok(new { message = "Order created successfully!" });
 
+
+    }
+
+    public async Task NotifyOrganizationOwnerAsync(Guid organizationId, string message)
+    {
+        var orgowner = await _context.Users.FirstAsync(u => u.OrganizationRole == OrganizationRole.Owner && u.OrganizationId == organizationId);
+        Console.WriteLine($"orgowner {orgowner}");
+        var notification = new Notification
+        {
+            UserId = orgowner.Id,
+            Message = message
+
+        };
+        Console.WriteLine($"orgowner notif {notification}");
+
+        await _context.Notifications.AddAsync(notification);
+        await _context.SaveChangesAsync();
 
     }
 

@@ -7,7 +7,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Cryptography;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,6 +59,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
 var app = builder.Build();
@@ -100,4 +100,5 @@ using (var scope = app.Services.CreateScope())
         context.SaveChanges();
     }
 }
+
 app.Run();

@@ -3,6 +3,7 @@ using System;
 using Delivera.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Delivera.Migrations
 {
     [DbContext(typeof(DeliveraDbContext))]
-    partial class DeliveraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250921021219_OrderModelUpdate2")]
+    partial class OrderModelUpdate2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.19");
@@ -145,6 +148,9 @@ namespace Delivera.Migrations
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("OrderDetails")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -169,7 +175,7 @@ namespace Delivera.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedById");
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("RiderSessionId");
 
@@ -380,8 +386,8 @@ namespace Delivera.Migrations
                 {
                     b.HasOne("Delivera.Models.BaseUser", "CreatedByUser")
                         .WithMany()
-                        .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Delivera.Models.RiderSession", null)
