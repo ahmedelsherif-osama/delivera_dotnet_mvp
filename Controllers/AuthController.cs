@@ -111,30 +111,6 @@ public class AuthController : ControllerBase
 
     }
 
-    //    /// <summary>
-    // /// Rider goes offline (end session).
-    // /// </summary>
-    // [HttpPut("end")]
-    // public IActionResult EndSession()
-    // {
-    //     var riderIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-    //     if (string.IsNullOrEmpty(riderIdStr))
-    //         return Unauthorized("Rider ID missing in token");
-
-    //     var riderId = Guid.Parse(riderIdStr);
-    //     var session = _context.RiderSessions.FirstOrDefault(s => s.RiderId == riderId && s.Status != SessionStatus.Completed);
-    //     if (session == null)
-    //     {
-    //         return BadRequest("No active session for this rider!");
-    //     }
-    //     session.Status = SessionStatus.Completed;
-    //     session.LastUpdated = DateTime.Now;
-    //     _context.SaveChanges();
-
-
-
-    //     return Ok(new { message = "Session ended", riderId });
-    // }
 
     [HttpGet("orders/superadmin")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -352,6 +328,11 @@ public class AuthController : ControllerBase
         org.IsApproved = true;
 
         await _context.SaveChangesAsync();
+
+        var message = $"Organization #{org.Id} {org.Name} is now approved";
+        await _notificationService.NotifyOrganizationOwnerAsync(org.Id, message);
+        await _notificationService.NotifySuperAdminAsync(message);
+
 
         return Ok("Organization approved successfully!");
 
