@@ -349,6 +349,8 @@ public class AuthController : ControllerBase
         var role = User.FindFirstValue(ClaimTypes.Role);
         var orgId = User.FindFirstValue("OrgId");
         if (string.IsNullOrEmpty(orgId)) return BadRequest("OrganizationId missing");
+        var org = await _context.Organizations.FirstOrDefaultAsync(o => o.Id == Guid.Parse(orgId));
+        if (org == null) return BadRequest("You don't belong to any organization!");
 
 
 
@@ -392,6 +394,9 @@ public class AuthController : ControllerBase
             Name = zone.Name,
             WktPolygon = zone.Area.AsText()
         };
+        var message = $"New Zone #{zone.Id} {zone.Name} created for Organization #{orgId} {org.Name}";
+        await _notificationService.NotifyOrganizationOwnerAsync(Guid.Parse(orgId), message);
+        await _notificationService.NotifyOrganizationAdminAsync(Guid.Parse(orgId), message);
 
         return CreatedAtAction(nameof(GetZone), new { id = zone.Id }, response);
     }
