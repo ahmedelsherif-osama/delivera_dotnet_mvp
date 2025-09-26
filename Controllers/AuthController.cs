@@ -22,6 +22,7 @@ using NetTopologySuite.Utilities;
 using Microsoft.Identity.Client;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Humanizer;
 
 namespace Delivera.Controllers;
 
@@ -67,6 +68,73 @@ public class AuthController : ControllerBase
 
         return Ok(orders);
     }
+
+    [HttpPut("endridersession/{sessionId}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
+    public async Task<IActionResult> EndRiderSession(Guid sessionId)
+    {
+        var session = await _context.RiderSessions.FirstAsync<RiderSession>(rs => rs.Id == sessionId);
+        var userOrgId = User.FindFirstValue("OrgId");
+        var sessionRiderId = session.RiderId;
+        var rider = await _context.Users.FirstAsync(u => u.Id == sessionRiderId);
+        var sessionOrgId = rider.OrganizationId;
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+
+
+        if (session == null) return BadRequest("Invalid Session Id");
+        if (userOrgId == null || userOrgId != sessionOrgId.ToString()) return Unauthorized();
+        if (role == OrganizationRole.Rider.ToString() && sessionRiderId.ToString() != userId) return Unauthorized();
+        if (session.Status == SessionStatus.Completed) return BadRequest("Session already completed!");
+
+        session.Status = SessionStatus.Completed;
+        session.LastUpdated = DateTime.Now;
+        var totalSessionDuration = session.LastUpdated - session.StartedAt;
+        var totalHours = totalSessionDuration.Hours;
+
+        // Example: total duration in minutes
+        var totalMinutes = totalSessionDuration.TotalMinutes;
+
+        // Example: total duration in seconds
+        var totalSeconds = totalSessionDuration.TotalSeconds;
+
+        await _context.SaveChangesAsync();
+        var message = $"Session #{sessionId} for rider {rider.FirstName + " " + rider.LastName} is completed at {session.LastUpdated.Humanize()}  total duration is {totalHours} hours";
+
+        await _notificationService.NotifyOrganizationAdminAsync(Guid.Parse(userOrgId), message);
+        await _notificationService.NotifyRiderAsync(rider.Id, message);
+        await _notificationService.NotifyOrgSupportAsync(Guid.Parse(userOrgId), message);
+        return Ok("Session successfully completed!" + session);
+
+
+
+    }
+
+    //    /// <summary>
+    // /// Rider goes offline (end session).
+    // /// </summary>
+    // [HttpPut("end")]
+    // public IActionResult EndSession()
+    // {
+    //     var riderIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    //     if (string.IsNullOrEmpty(riderIdStr))
+    //         return Unauthorized("Rider ID missing in token");
+
+    //     var riderId = Guid.Parse(riderIdStr);
+    //     var session = _context.RiderSessions.FirstOrDefault(s => s.RiderId == riderId && s.Status != SessionStatus.Completed);
+    //     if (session == null)
+    //     {
+    //         return BadRequest("No active session for this rider!");
+    //     }
+    //     session.Status = SessionStatus.Completed;
+    //     session.LastUpdated = DateTime.Now;
+    //     _context.SaveChanges();
+
+
+
+    //     return Ok(new { message = "Session ended", riderId });
+    // }
 
     [HttpGet("orders/superadmin")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -223,30 +291,7 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Location updated", riderId });
     }
 
-    /// <summary>
-    /// Rider goes offline (end session).
-    /// </summary>
-    [HttpPut("end")]
-    public IActionResult EndSession()
-    {
-        var riderIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(riderIdStr))
-            return Unauthorized("Rider ID missing in token");
 
-        var riderId = Guid.Parse(riderIdStr);
-        var session = _context.RiderSessions.FirstOrDefault(s => s.RiderId == riderId && s.Status != SessionStatus.Completed);
-        if (session == null)
-        {
-            return BadRequest("No active session for this rider!");
-        }
-        session.Status = SessionStatus.Completed;
-        session.LastUpdated = DateTime.Now;
-        _context.SaveChanges();
-
-
-
-        return Ok(new { message = "Session ended", riderId });
-    }
 
     [Authorize]
     [HttpGet("getzone/{id}")]

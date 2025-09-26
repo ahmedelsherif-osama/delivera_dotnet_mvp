@@ -10,6 +10,7 @@ public interface INotificationService
     Task NotifyOrderCreatorAsync(Order order, string message);
     Task NotifyRiderAsync(Guid riderId, string message);
     Task NotifyUserAsync(Guid userId, string message);
+    Task NotifyOrgSupportAsync(Guid userOrgId, string message);
 }
 
 
@@ -35,6 +36,21 @@ public class NotificationService : INotificationService
         await _context.SaveChangesAsync();
     }
     ///
+    /// 
+    public async Task NotifyOrgSupportAsync(Guid organizationId, string message)
+    {
+        var orgSupportUsers = await _context.Users
+        .AsNoTracking()
+        .Where(u => u.OrganizationId == organizationId && u.OrganizationRole == OrganizationRole.Support)
+        .ToListAsync();
+
+        foreach (var user in orgSupportUsers)
+        {
+            await NotifyUserAsync(user.Id, message);
+        }
+
+    }
+
     public async Task NotifyOrganizationOwnerAsync(Guid organizationId, string message)
     {
         var orgowner = await _context.Users.FirstAsync(u => u.OrganizationRole == OrganizationRole.Owner && u.OrganizationId == organizationId);
@@ -72,6 +88,7 @@ public class NotificationService : INotificationService
         await NotifyUserAsync(riderId, message);
 
     }
+
 
 
 }
