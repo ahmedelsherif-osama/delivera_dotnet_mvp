@@ -500,6 +500,10 @@ public class AuthController : ControllerBase
 
         _context.SaveChanges();
 
+        var message = $"Order #{order.Id} assigned to rider #{rider.Id}";
+        await _notificationService.NotifyRiderAsync(rider.RiderId, message);
+        await _notificationService.NotifyOrderCreatorAsync(order, message);
+
         return Ok(new
         {
             message = "Rider assigned",
