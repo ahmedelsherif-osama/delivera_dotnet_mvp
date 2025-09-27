@@ -74,6 +74,8 @@ public class NotificationService : INotificationService
     public async Task NotifyOrganizationAdminAsync(Guid organizationId, string message)
     {
         var orgAdmin = await _context.Users.FirstOrDefaultAsync(u => u.OrganizationRole == OrganizationRole.Admin && u.OrganizationId == organizationId);
+        if (orgAdmin == null) return;
+
         await NotifyUserAsync(orgAdmin.Id, message);
 
     }

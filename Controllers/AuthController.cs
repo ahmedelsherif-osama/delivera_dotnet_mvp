@@ -888,7 +888,7 @@ public class AuthController : ControllerBase
         if (userToApprove == null)
             return NotFound("User not found.");
 
-        if (userToApprove.IsSuperAdminApproved)
+        if (userToApprove.IsSuperAdminApproved == true)
             return BadRequest("User is already approved by SuperAdmin.");
 
         userToApprove.IsSuperAdminApproved = true;
@@ -896,6 +896,13 @@ public class AuthController : ControllerBase
         userToApprove.ApprovedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+        var message = $"User {userToApprove.Username} #{userId} is approved by superadmin";
+        if (userToApprove.OrganizationId == null || userToApprove.OrganizationId == Guid.Empty) return BadRequest("User is not part of any organization!");
+        await _notificationService.NotifyOrganizationOwnerAsync(userToApprove!.OrganizationId ?? Guid.NewGuid(), message);
+        await _notificationService.NotifyOrganizationAdminAsync(userToApprove!.OrganizationId ?? Guid.NewGuid(), message);
+        await _notificationService.NotifySuperAdminAsync(message);
+        await _notificationService.NotifyUserAsync(userId, message);
+
         return Ok(new { message = "User approved by SuperAdmin.", userToApprove.Id, userToApprove.IsSuperAdminApproved });
     }
 
