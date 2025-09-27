@@ -1,5 +1,6 @@
 using Delivera.Data;
 using Delivera.Models;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 public interface INotificationService
@@ -17,10 +18,12 @@ public interface INotificationService
 public class NotificationService : INotificationService
 {
     private readonly DeliveraDbContext _context;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public NotificationService(DeliveraDbContext context)
+    public NotificationService(DeliveraDbContext context, IHubContext<NotificationHub> hubContext)
     {
         _context = context;
+        _hubContext = hubContext;
     }
 
     public async Task NotifyUserAsync(Guid userId, string message)
@@ -34,6 +37,13 @@ public class NotificationService : INotificationService
         };
         await _context.Notifications.AddAsync(notification);
         await _context.SaveChangesAsync();
+
+        await _hubContext.Clients.Group(userId.ToString()).SendAsync("Receive Notification", new
+        {
+            notification.Id,
+            notification.Message,
+            notification.CreatedAt
+        });
     }
     ///
     /// 
