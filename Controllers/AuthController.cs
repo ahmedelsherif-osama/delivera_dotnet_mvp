@@ -45,6 +45,25 @@ public class AuthController : ControllerBase
         _notificationService = notificationService;
     }
 
+    [HttpPut("notifications/markasread/{notificationId}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> MarkNotificationAsRead(Guid notificationId)
+    {
+        var notification = await _context.Notifications.FirstOrDefaultAsync(n => n.Id == notificationId);
+        if (notification == null) return BadRequest("Notification does not exist!");
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return BadRequest("User does not exist!");
+        if (Guid.Parse(userId) != notification.UserId) return Unauthorized();
+
+        if (notification.Read) return BadRequest("Notification already marked as read!");
+
+        notification.Read = true;
+        await _context.SaveChangesAsync();
+
+        return Ok("Notification marked as read!");
+
+    }
+
     [HttpGet("orders/")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> GetAllOrgOrders()
