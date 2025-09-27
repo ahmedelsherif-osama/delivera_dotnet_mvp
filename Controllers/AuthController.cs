@@ -935,8 +935,16 @@ public class AuthController : ControllerBase
         userToApprove.IsOrgOwnerApproved = true;
         userToApprove.ApprovedById = orgOwner.Id;
         userToApprove.ApprovedAt = DateTime.UtcNow;
+        var orgId = userToApprove.OrganizationId;
+        if (orgId == null) return BadRequest("User doesnt belong to any organization!");
 
         await _context.SaveChangesAsync();
+        var message = $"User {userToApprove.Username} #{userId} is approved by Organization Owner";
+        await _notificationService.NotifyOrganizationOwnerAsync(orgId ?? Guid.Empty, message);
+        await _notificationService.NotifyOrganizationAdminAsync(orgId ?? Guid.Empty, message);
+        await _notificationService.NotifyUserAsync(userId, message);
+
+
         return Ok(new { message = "User approved by OrgOwner.", userToApprove.Id, userToApprove.IsOrgOwnerApproved });
     }
 

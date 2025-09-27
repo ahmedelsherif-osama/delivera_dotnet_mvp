@@ -23,8 +23,8 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "userName": "superadmin",
-  "password": "ChangeMe123!"
+  "userName": "blablabla2",
+  "password": "changemE@123"
     # "password": "ChangeMe123!" 
 
   # "password": "changemE@123"
@@ -41,10 +41,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hc
 
 
 ###
-POST http://localhost:5208/api/Auth/approve/orgowner/0E7696FA-813A-4E83-B1E8-9D05C2A1EB2C
+PUT http://localhost:5208/api/Auth/approve/orgowner/0E7696FA-813A-4E83-B1E8-9D05C2A1EB2C
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjBlNzY5NmZhLTgxM2EtNGU4My1iMWU4LTlkMDVjMmExZWIyYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJibGFibGFibGEyIiwiUm9sZSI6Ik9yZ1VzZXIiLCJleHAiOjE3NTY1MjkyMTAsImlzcyI6IkRlbGl2ZXJhIiwiYXVkIjoiRGVsaXZlcmFVc2VycyJ9.oGFne1GGND70_iOFEPaVJbmXI48xQwlytaRi_whsuwA
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjBlNzY5NmZhLTgxM2EtNGU4My1iMWU4LTlkMDVjMmExZWIyYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3QxMUBleGFtcGxlLmNvbSIsIk9yZ0lkIjoiYWQ4ZWEzOGMtMzZjMi00OGU5LWI2ZDgtNTU4ZWM0ZDllZThiIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiT3duZXIiLCJSb2xlIjoiT3JnVXNlciIsImV4cCI6MTc1ODk2NzIyMSwiaXNzIjoiRGVsaXZlcmEiLCJhdWQiOiJEZWxpdmVyYVVzZXJzIn0.CT98fyCjLZCvVbhlFVnSWk0Oejg1_skPT7nH8Vseq-0
 
 
 ###
