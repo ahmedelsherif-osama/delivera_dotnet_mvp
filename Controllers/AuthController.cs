@@ -23,6 +23,7 @@ using Microsoft.Identity.Client;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Humanizer;
+using Deliver.DTOs;
 
 namespace Delivera.Controllers;
 
@@ -527,6 +528,66 @@ public class AuthController : ControllerBase
         {
             message = "Rider assigned",
             riderId = rider.RiderId
+        });
+    }
+
+    [Authorize]
+    [HttpPut("admin/assignrider")]
+    public async Task<ActionResult> AssignRiderAdmin(Guid orderId, [FromBody] AssignRiderRequest assignRiderRequest)
+    {
+        Console.WriteLine("within assign rider");
+        // ✅ 1. Find order
+        var order = await _context.Orders.Include(o => o.CreatedByUser).FirstOrDefaultAsync(o => o.Id == orderId);
+        Console.WriteLine("found order");
+        if (order == null) return NotFound(new { error = "Order not found" });
+        if (order.PickUpLocation == null)
+            return BadRequest("Order has no pickup location");
+
+        var orgId = User.FindFirstValue("OrgId");
+        if (orgId == null) return Unauthorized("You do not belong to any organization!");
+
+        var orderCreator = order.CreatedByUser;
+        if (orderCreator == null) return NotFound("Order creator not found!");
+
+        if (Guid.Parse(orgId) != orderCreator.OrganizationId) return Unauthorized("You do not belong to this Organization!");
+
+        // ✅ 2. Check user permissions
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        if (role != OrganizationRole.Owner.ToString() &&
+            role != OrganizationRole.Admin.ToString())
+        {
+            return Forbid("Only admins or owners can assign riders");
+        }
+
+        Console.WriteLine("done with finding orders and permissions");
+        var riderId = assignRiderRequest.RiderId;
+
+
+        var rider = await _context.Users.FirstOrDefaultAsync(u => u.Id == riderId);
+        if (rider == null) return BadRequest("Rider not found!");
+
+
+        if (Guid.Parse(orgId) != rider.OrganizationId) return Unauthorized("This rider does not belong to your organization!");
+
+        var riderSession = await _context.RiderSessions.FirstOrDefaultAsync(s => s.RiderId == riderId && s.Status != SessionStatus.Completed);
+        if (riderSession == null) return BadRequest("Rider is not logged in! Please ask the rider to login first!");
+
+
+
+        order.RiderId = riderId;
+        order.RiderSessionId = riderSession.Id;
+        order.RiderSession = riderSession;
+
+        await _context.SaveChangesAsync();
+
+        var message = $"Order #{order.Id} assigned to rider #{riderId}";
+        await _notificationService.NotifyRiderAsync(riderId, message);
+        await _notificationService.NotifyOrderCreatorAsync(order, message);
+
+        return Ok(new
+        {
+            message = "Rider assigned",
+            riderId = rider.Id
         });
     }
 
