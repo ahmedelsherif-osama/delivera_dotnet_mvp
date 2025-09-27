@@ -336,4 +336,52 @@ public class AuthController : ControllerBase
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+    {
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+
+        var tokenEntry = await _context.RefreshTokens
+            .FirstOrDefaultAsync(t => t.Token == request.RefreshToken && !t.IsRevoked);
+
+        if (tokenEntry == null)
+            return BadRequest("Invalid refresh token");
+
+        tokenEntry.IsRevoked = true;
+        tokenEntry.RevokedAt = DateTime.UtcNow;
+
+        Console.WriteLine($"vat is {userId}");
+
+
+        if (role == OrganizationRole.Rider.ToString())
+        {
+
+            // var sessions = await _context.RiderSessions.ToListAsync();
+            // Console.WriteLine(sessions);
+            var session = await _context.RiderSessions.FirstOrDefaultAsync(s => s.RiderId.ToString().ToLower() == userId!.ToLower() && s.Status != SessionStatus.Completed);
+            if (session != null)
+            {
+                Console.WriteLine("not null bro");
+                session.Status = SessionStatus.Completed;
+                await _context.SaveChangesAsync();
+
+
+            }
+            else
+            {
+                Console.WriteLine("session is null bro");
+            }
+
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Logged out successfully" });
+    }
+
+
 }
