@@ -221,6 +221,7 @@ public class AuthController : ControllerBase
         });
     }
 
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
     {
@@ -238,7 +239,7 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             AccessToken = newAccessToken,
-            RefreshToken = request.RefreshToken, // reuse same until expired/revoked
+            RefreshToken = request.RefreshToken,
             ExpiresIn = 3 * 60 * 60
         });
     }

@@ -39,3 +39,4 @@ secrets.json
 
 # User-specific test files
 *.http
+Delivera.http
