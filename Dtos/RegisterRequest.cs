@@ -13,6 +13,8 @@ namespace Delivera.DTOs
         public string Username { get; set; } = string.Empty;
 
         [Required]
+        [StringLength(100, MinimumLength = 8,
+    ErrorMessage = "Password must be at least 8 characters long.")]
         [RegularExpression(@"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*#?&]).+$",
        ErrorMessage = "Password must contain upper, lower, number, and special char.")]
         public string Password { get; set; } = string.Empty;
