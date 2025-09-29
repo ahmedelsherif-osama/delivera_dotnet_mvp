@@ -298,7 +298,8 @@ public class AuthController : ControllerBase
             message = "Login successful",
             user.Id,
             user.Username,
-            user.GlobalRole
+            user.GlobalRole,
+            user.OrganizationRole
         });
 
 
@@ -350,7 +351,10 @@ public class AuthController : ControllerBase
             .FirstOrDefaultAsync(t => t.Token == request.RefreshToken && !t.IsRevoked);
 
         if (tokenEntry == null)
+        {
+
             return BadRequest("Invalid refresh token");
+        }
 
         tokenEntry.IsRevoked = true;
         tokenEntry.RevokedAt = DateTime.UtcNow;
