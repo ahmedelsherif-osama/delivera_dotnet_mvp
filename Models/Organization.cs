@@ -5,7 +5,7 @@ namespace Delivera.Models
     public class Organization
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public string ShortId => CodeGeneratorHelper.Base62Encode(Id);
+        public string ShortCode { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string RegistrationNumber { get; set; } = string.Empty;
 

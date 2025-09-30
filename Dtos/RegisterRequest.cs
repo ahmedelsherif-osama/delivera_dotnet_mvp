@@ -48,11 +48,14 @@ namespace Delivera.DTOs
 
         public OrganizationRole? OrganizationRole { get; set; }
 
+
         public Guid? CreatedById { get; set; }
         public Guid? ApprovedById { get; set; }
         // public BaseUser? CreatedByUser { get; set; }
 
-        public Guid? OrganizationId { get; set; }
+        public string? OrganizationShortCode { get; set; }
+
+        // public Guid? OrganizationId { get; set; }
         // public Organization? Organization { get; set; }
 
         public static ValidationResult? ValidateDateOfBirth(DateTime? dob, ValidationContext context)

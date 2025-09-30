@@ -24,6 +24,7 @@ using System.Threading.Tasks.Dataflow;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Humanizer;
 using Deliver.DTOs;
+using Delivera.Helpers;
 
 namespace Delivera.Controllers;
 
@@ -112,7 +113,7 @@ public class AuthController : ControllerBase
                             OrganizationRole = OrganizationRole.Owner,
                             IsOrgOwnerApproved = true,
                             CreatedById = request.CreatedById,
-                            OrganizationId = request.OrganizationId
+                            // OrganizationId = request.OrganizationId
 
                         };
 
@@ -122,8 +123,9 @@ public class AuthController : ControllerBase
                         var org = new Organization
                         {
                             IsApproved = false,
-                            OwnerId = user.Id // ✅ now safe
+                            OwnerId = user.Id, // ✅ now safe
                         };
+                        org.ShortCode = CodeGeneratorHelper.Base62Encode(org.Id);
 
                         _context.Organizations.Add(org);
                         await _context.SaveChangesAsync();
@@ -134,15 +136,19 @@ public class AuthController : ControllerBase
                         break;
 
                     case OrganizationRole.Admin:
-                        if (!request.OrganizationId.HasValue)
-                            return BadRequest("OrganizationId required for Admin.");
+                        if (request.OrganizationShortCode.IsNullOrEmpty())
+                            return BadRequest("Organization short code is required for Admin users.");
+
+                        var org2 = await _context.Organizations.FirstOrDefaultAsync(o => o.ShortCode == request.OrganizationShortCode);
+                        if (org2 == null) return NotFound("Invalid short code! Please check you organizations short code!");
+                        var orgId2 = org2.Id;
                         user = new OrgAdmin
                         {
                             Email = request.Email,
                             Username = request.Username,
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
-                            OrganizationId = request.OrganizationId.Value,
+                            OrganizationId = orgId2,
                             PhoneNumber = request.PhoneNumber,
                             FirstName = request.FirstName,
                             LastName = request.LastName,
@@ -156,15 +162,19 @@ public class AuthController : ControllerBase
                         break;
 
                     case OrganizationRole.Support:
-                        if (!request.OrganizationId.HasValue)
-                            return BadRequest("OrganizationId required for Support.");
+                        if (request.OrganizationShortCode.IsNullOrEmpty())
+                            return BadRequest("Organization short code is required for Support users.");
+
+                        var org3 = await _context.Organizations.FirstOrDefaultAsync(o => o.ShortCode == request.OrganizationShortCode);
+                        if (org3 == null) return NotFound("Invalid short code! Please check you organizations short code!");
+                        var orgId3 = org3.Id;
                         user = new OrgSupport
                         {
                             Email = request.Email,
                             Username = request.Username,
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
-                            OrganizationId = request.OrganizationId.Value,
+                            OrganizationId = orgId3,
                             FirstName = request.FirstName,
                             LastName = request.LastName,
                             DateOfBirth = request.DateOfBirth,
@@ -178,15 +188,20 @@ public class AuthController : ControllerBase
                         break;
 
                     case OrganizationRole.Rider:
-                        if (!request.OrganizationId.HasValue)
-                            return BadRequest("OrganizationId required for Rider.");
+                        Console.WriteLine(request.OrganizationShortCode);
+                        if (request.OrganizationShortCode.IsNullOrEmpty())
+                            return BadRequest("Organization short code required for Rider users.");
+                        var orgs = await _context.Organizations.ToListAsync();
+                        var org4 = orgs.FirstOrDefault(o => o.ShortCode == request.OrganizationShortCode);
+                        if (org4 == null) return NotFound("Invalid short code! Please check you organizations short code!");
+                        var orgId4 = org4.Id;
                         user = new Rider
                         {
                             Email = request.Email,
                             Username = request.Username,
                             PasswordHash = HashPassword(request.Password),
                             GlobalRole = GlobalRole.OrgUser,
-                            OrganizationId = request.OrganizationId.Value,
+                            OrganizationId = orgId4,
                             FirstName = request.FirstName,
                             LastName = request.LastName,
                             DateOfBirth = request.DateOfBirth,
