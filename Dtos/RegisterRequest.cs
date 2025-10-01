@@ -43,8 +43,8 @@ namespace Delivera.DTOs
         public bool IsActive { get; set; } = true;
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        [Required]
-        public GlobalRole GlobalRole { get; set; }
+        // [Required]
+        // public GlobalRole GlobalRole { get; set; }
 
         public OrganizationRole? OrganizationRole { get; set; }
 
@@ -54,6 +54,8 @@ namespace Delivera.DTOs
         // public BaseUser? CreatedByUser { get; set; }
 
         public string? OrganizationShortCode { get; set; }
+        public string? RegistrationNumber { get; set; }
+
 
         // public Guid? OrganizationId { get; set; }
         // public Organization? Organization { get; set; }

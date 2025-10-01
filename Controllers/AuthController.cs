@@ -63,157 +63,131 @@ public class AuthController : ControllerBase
         if (await _context.Users.AnyAsync(u => u.Username == request.Username))
             return BadRequest("Username is not available.");
 
-        if (request.GlobalRole == GlobalRole.SuperAdmin)
-        {
-            bool superAdminExists = await _context.Users
-                .AnyAsync(u => u.GlobalRole == GlobalRole.SuperAdmin);
 
-            if (superAdminExists)
-                return BadRequest("A SuperAdmin already exists.");
-        }
 
-        switch (request.GlobalRole)
+
+
+        switch (request.OrganizationRole.Value)
         {
-            case GlobalRole.SuperAdmin:
-                user = new AdminUser
+            case OrganizationRole.Owner:
+                if (request.RegistrationNumber.IsNullOrEmpty())
+                {
+                    return BadRequest("Organizaton Registration Number is required");
+                }
+                user = new OrgOwner
                 {
                     Email = request.Email,
                     Username = request.Username,
                     PasswordHash = HashPassword(request.Password),
-                    GlobalRole = GlobalRole.SuperAdmin,
+                    GlobalRole = GlobalRole.OrgUser,
                     PhoneNumber = request.PhoneNumber,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     DateOfBirth = request.DateOfBirth,
                     NationalId = request.NationalId,
+                    OrganizationRole = OrganizationRole.Owner,
+                    IsOrgOwnerApproved = true,
+                    CreatedById = request.CreatedById,
+                    // OrganizationId = request.OrganizationId
 
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync(); // ✅ ensure user.Id exists
+
+                var org = new Organization
+                {
+                    IsApproved = false,
+                    OwnerId = user.Id, // ✅ now safe
+                    RegistrationNumber = request.RegistrationNumber!
+                };
+                org.ShortCode = CodeGeneratorHelper.Base62Encode(org.Id);
+
+                _context.Organizations.Add(org);
+                await _context.SaveChangesAsync();
+
+                // optional: link user → org for convenience
+                user.OrganizationId = org.Id;
+                await _context.SaveChangesAsync();
+                break;
+
+            case OrganizationRole.Admin:
+                if (request.OrganizationShortCode.IsNullOrEmpty())
+                    return BadRequest("Organization short code is required for Admin users.");
+
+                var org2 = await _context.Organizations.FirstOrDefaultAsync(o => o.ShortCode == request.OrganizationShortCode);
+                if (org2 == null) return NotFound("Invalid short code! Please check you organizations short code!");
+                var orgId2 = org2.Id;
+                user = new OrgAdmin
+                {
+                    Email = request.Email,
+                    Username = request.Username,
+                    PasswordHash = HashPassword(request.Password),
+                    GlobalRole = GlobalRole.OrgUser,
+                    OrganizationId = orgId2,
+                    PhoneNumber = request.PhoneNumber,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    DateOfBirth = request.DateOfBirth,
+                    NationalId = request.NationalId,
+                    OrganizationRole = OrganizationRole.Admin,
+                    CreatedById = request.CreatedById,
 
                 };
                 _context.Users.Add(user);
                 break;
 
-            case GlobalRole.OrgUser:
-                if (!request.OrganizationRole.HasValue)
-                    return BadRequest("Organization role is required for OrgUser.");
+            case OrganizationRole.Support:
+                if (request.OrganizationShortCode.IsNullOrEmpty())
+                    return BadRequest("Organization short code is required for Support users.");
 
-                switch (request.OrganizationRole.Value)
+                var org3 = await _context.Organizations.FirstOrDefaultAsync(o => o.ShortCode == request.OrganizationShortCode);
+                if (org3 == null) return NotFound("Invalid short code! Please check you organizations short code!");
+                var orgId3 = org3.Id;
+                user = new OrgSupport
                 {
-                    case OrganizationRole.Owner:
-                        user = new OrgOwner
-                        {
-                            Email = request.Email,
-                            Username = request.Username,
-                            PasswordHash = HashPassword(request.Password),
-                            GlobalRole = GlobalRole.OrgUser,
-                            PhoneNumber = request.PhoneNumber,
-                            FirstName = request.FirstName,
-                            LastName = request.LastName,
-                            DateOfBirth = request.DateOfBirth,
-                            NationalId = request.NationalId,
-                            OrganizationRole = OrganizationRole.Owner,
-                            IsOrgOwnerApproved = true,
-                            CreatedById = request.CreatedById,
-                            // OrganizationId = request.OrganizationId
+                    Email = request.Email,
+                    Username = request.Username,
+                    PasswordHash = HashPassword(request.Password),
+                    GlobalRole = GlobalRole.OrgUser,
+                    OrganizationId = orgId3,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    DateOfBirth = request.DateOfBirth,
+                    NationalId = request.NationalId,
+                    OrganizationRole = OrganizationRole.Support,
+                    PhoneNumber = request.PhoneNumber,
 
-                        };
+                    CreatedById = request.CreatedById
+                };
+                _context.Users.Add(user);
+                break;
 
-                        _context.Users.Add(user);
-                        await _context.SaveChangesAsync(); // ✅ ensure user.Id exists
+            case OrganizationRole.Rider:
+                Console.WriteLine(request.OrganizationShortCode);
+                if (request.OrganizationShortCode.IsNullOrEmpty())
+                    return BadRequest("Organization short code required for Rider users.");
+                var orgs = await _context.Organizations.ToListAsync();
+                var org4 = orgs.FirstOrDefault(o => o.ShortCode == request.OrganizationShortCode);
+                if (org4 == null) return NotFound("Invalid short code! Please check you organizations short code!");
+                var orgId4 = org4.Id;
+                user = new Rider
+                {
+                    Email = request.Email,
+                    Username = request.Username,
+                    PasswordHash = HashPassword(request.Password),
+                    GlobalRole = GlobalRole.OrgUser,
+                    OrganizationId = orgId4,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    DateOfBirth = request.DateOfBirth,
+                    NationalId = request.NationalId,
+                    PhoneNumber = request.PhoneNumber,
 
-                        var org = new Organization
-                        {
-                            IsApproved = false,
-                            OwnerId = user.Id, // ✅ now safe
-                        };
-                        org.ShortCode = CodeGeneratorHelper.Base62Encode(org.Id);
-
-                        _context.Organizations.Add(org);
-                        await _context.SaveChangesAsync();
-
-                        // optional: link user → org for convenience
-                        user.OrganizationId = org.Id;
-                        await _context.SaveChangesAsync();
-                        break;
-
-                    case OrganizationRole.Admin:
-                        if (request.OrganizationShortCode.IsNullOrEmpty())
-                            return BadRequest("Organization short code is required for Admin users.");
-
-                        var org2 = await _context.Organizations.FirstOrDefaultAsync(o => o.ShortCode == request.OrganizationShortCode);
-                        if (org2 == null) return NotFound("Invalid short code! Please check you organizations short code!");
-                        var orgId2 = org2.Id;
-                        user = new OrgAdmin
-                        {
-                            Email = request.Email,
-                            Username = request.Username,
-                            PasswordHash = HashPassword(request.Password),
-                            GlobalRole = GlobalRole.OrgUser,
-                            OrganizationId = orgId2,
-                            PhoneNumber = request.PhoneNumber,
-                            FirstName = request.FirstName,
-                            LastName = request.LastName,
-                            DateOfBirth = request.DateOfBirth,
-                            NationalId = request.NationalId,
-                            OrganizationRole = OrganizationRole.Admin,
-                            CreatedById = request.CreatedById,
-
-                        };
-                        _context.Users.Add(user);
-                        break;
-
-                    case OrganizationRole.Support:
-                        if (request.OrganizationShortCode.IsNullOrEmpty())
-                            return BadRequest("Organization short code is required for Support users.");
-
-                        var org3 = await _context.Organizations.FirstOrDefaultAsync(o => o.ShortCode == request.OrganizationShortCode);
-                        if (org3 == null) return NotFound("Invalid short code! Please check you organizations short code!");
-                        var orgId3 = org3.Id;
-                        user = new OrgSupport
-                        {
-                            Email = request.Email,
-                            Username = request.Username,
-                            PasswordHash = HashPassword(request.Password),
-                            GlobalRole = GlobalRole.OrgUser,
-                            OrganizationId = orgId3,
-                            FirstName = request.FirstName,
-                            LastName = request.LastName,
-                            DateOfBirth = request.DateOfBirth,
-                            NationalId = request.NationalId,
-                            OrganizationRole = OrganizationRole.Support,
-                            PhoneNumber = request.PhoneNumber,
-
-                            CreatedById = request.CreatedById
-                        };
-                        _context.Users.Add(user);
-                        break;
-
-                    case OrganizationRole.Rider:
-                        Console.WriteLine(request.OrganizationShortCode);
-                        if (request.OrganizationShortCode.IsNullOrEmpty())
-                            return BadRequest("Organization short code required for Rider users.");
-                        var orgs = await _context.Organizations.ToListAsync();
-                        var org4 = orgs.FirstOrDefault(o => o.ShortCode == request.OrganizationShortCode);
-                        if (org4 == null) return NotFound("Invalid short code! Please check you organizations short code!");
-                        var orgId4 = org4.Id;
-                        user = new Rider
-                        {
-                            Email = request.Email,
-                            Username = request.Username,
-                            PasswordHash = HashPassword(request.Password),
-                            GlobalRole = GlobalRole.OrgUser,
-                            OrganizationId = orgId4,
-                            FirstName = request.FirstName,
-                            LastName = request.LastName,
-                            DateOfBirth = request.DateOfBirth,
-                            NationalId = request.NationalId,
-                            PhoneNumber = request.PhoneNumber,
-
-                            OrganizationRole = OrganizationRole.Rider,
-                            CreatedById = request.CreatedById
-                        };
-                        _context.Users.Add(user);
-                        break;
-                }
+                    OrganizationRole = OrganizationRole.Rider,
+                    CreatedById = request.CreatedById
+                };
+                _context.Users.Add(user);
                 break;
         }
 
@@ -227,7 +201,7 @@ public class AuthController : ControllerBase
             throw;
         }
 
-        return Ok(new RegisterResponse
+        return Created(string.Empty, new RegisterResponse
         {
             Id = user.Id,
             Email = user.Email,

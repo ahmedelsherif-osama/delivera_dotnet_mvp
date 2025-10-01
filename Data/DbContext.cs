@@ -91,7 +91,7 @@ namespace Delivera.Data
     .HasForeignKey(o => o.RiderSessionId)
     .OnDelete(DeleteBehavior.SetNull);
 
-    
+
 
 
 
