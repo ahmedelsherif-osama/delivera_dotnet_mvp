@@ -27,6 +27,27 @@ public class AdminActionsController : ControllerBase
         _notificationService = notificationService;
     }
 
+    [HttpGet("users")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetUsers()
+    {
+        var role = User.FindFirstValue("Role");
+
+        if (role != GlobalRole.SuperAdmin.ToString())
+        {
+            return Unauthorized("Admin restricted!");
+        }
+
+        var users = await _context.Users.ToListAsync();
+        if (users.IsNullOrEmpty())
+        {
+            return NotFound("No users were found!");
+        }
+        return Ok(users);
+
+    }
+
+
     [HttpGet("organizations")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 
