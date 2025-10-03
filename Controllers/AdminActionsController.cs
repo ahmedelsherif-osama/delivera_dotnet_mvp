@@ -73,6 +73,10 @@ public class AdminActionsController : ControllerBase
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> ApproveOrganization(Guid organizationId)
     {
+        if (organizationId == null || organizationId == Guid.Empty)
+        {
+            return BadRequest("Organization Id is required!");
+        }
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = User.FindFirstValue(ClaimTypes.Email);
         var role = User.FindFirstValue("Role");
@@ -104,6 +108,47 @@ public class AdminActionsController : ControllerBase
 
 
         return Ok("Organization approved successfully!");
+
+    }
+    [HttpPatch("superadmin/revokeOrg/{organizationId}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> RevokeOrganizationApproval(Guid organizationId)
+    {
+        if (organizationId == null || organizationId == Guid.Empty)
+        {
+            return BadRequest("Organization Id is required!");
+        }
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var role = User.FindFirstValue("Role");
+        // var role2 = User.FindFirstValue(ClaimTypes.Role);
+
+        foreach (var claim in User.Claims)
+        {
+            Console.WriteLine($"{claim.Type}: {claim.Value}");
+        }
+        Console.WriteLine($"role 1: ${role} - role 2: $");
+        if (role != GlobalRole.SuperAdmin.ToString())
+        {
+            return Unauthorized("Only administrator can revoke an organization!");
+        }
+
+        var org = await _context.Organizations.FirstOrDefaultAsync(o => o.Id == organizationId);
+        if (org == null)
+        {
+            return NotFound("Organization not found!");
+        }
+
+        org.IsApproved = false;
+
+        await _context.SaveChangesAsync();
+
+        var message = $"Organization #{org.Id} {org.Name} approval is now revoked!";
+        await _notificationService.NotifyOrganizationOwnerAsync(org.Id, message);
+        await _notificationService.NotifySuperAdminAsync(message);
+
+
+        return Ok("Organization approval is now revoked!");
 
     }
 
