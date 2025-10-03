@@ -32,13 +32,37 @@ public class AdminActionsController : ControllerBase
     public async Task<IActionResult> GetUsers()
     {
         var role = User.FindFirstValue("Role");
+        var orgRole = User.FindFirstValue(ClaimTypes.Role);
 
-        if (role != GlobalRole.SuperAdmin.ToString())
+        if (role != GlobalRole.SuperAdmin.ToString() && orgRole != OrganizationRole.Owner.ToString())
         {
             return Unauthorized("Admin restricted!");
         }
 
-        var users = await _context.Users.ToListAsync();
+        var users = await _context.Users.Select(u =>
+        new
+        {
+            Id = u.Id,
+            Email = u.Email,
+            Username = u.Username,
+            PhoneNumber = u.PhoneNumber,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            DateOfBirth = u.DateOfBirth,
+            NationalId = u.NationalId,
+            IsOrgOwnerApproved = u.IsOrgOwnerApproved,
+            IsSuperAdminApproved = u.IsSuperAdminApproved,
+            IsActive = u.IsActive,
+            CreatedAt = u.CreatedAt,
+            ApprovedAt = u.ApprovedAt,
+            GlobalRole = u.GlobalRole,
+            OrganizationRole = u.OrganizationRole,
+            CreatedById = u.CreatedById,
+            ApprovedById = u.ApprovedById,
+            OrganizationId = u.OrganizationId
+        }
+        ).ToListAsync();
+
         if (users.IsNullOrEmpty())
         {
             return NotFound("No users were found!");
@@ -152,7 +176,7 @@ public class AdminActionsController : ControllerBase
 
     }
 
-    [HttpPut("superadmin/approveuser/{userId:guid}")]
+    [HttpPatch("superadmin/approveuser/{userId:guid}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> ApproveBySuperAdmin(Guid userId)
     {
@@ -191,10 +215,49 @@ public class AdminActionsController : ControllerBase
 
         return Ok(new { message = "User approved by SuperAdmin.", userToApprove.Id, userToApprove.IsSuperAdminApproved });
     }
+    [HttpPatch("superadmin/revokeuser/{userId:guid}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> RevokeBySuperAdmin(Guid userId)
+    {
+        // 🔑 Verify JWT
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var role = User.FindFirstValue("Role");
+
+        // No identity (JWT missing/invalid) → 401
+        if (callerId == null)
+            return Unauthorized("Please login and try again!");
+
+        // Identity exists but not enough privileges → 403
+        if (role != GlobalRole.SuperAdmin.ToString())
+            return StatusCode(StatusCodes.Status403Forbidden,
+        new { message = "Only SuperAdmins can approve or revoke users." });
+
+
+        var userToApprove = await _context.Users.FindAsync(userId);
+        if (userToApprove == null)
+            return NotFound("User not found.");
+
+        if (userToApprove.IsSuperAdminApproved == false)
+            return BadRequest("User is already revoked by SuperAdmin.");
+
+        userToApprove.IsSuperAdminApproved = false;
+        // userToApprove.ApprovedById = Guid.Empty;
+        // userToApprove.ApprovedAt = DateTime.em;
+
+        await _context.SaveChangesAsync();
+        var message = $"User {userToApprove.Username} #{userId} is revoked by superadmin";
+        if (userToApprove.OrganizationId == null || userToApprove.OrganizationId == Guid.Empty) return BadRequest("User is not part of any organization!");
+        await _notificationService.NotifyOrganizationOwnerAsync(userToApprove!.OrganizationId ?? Guid.NewGuid(), message);
+        await _notificationService.NotifyOrganizationAdminAsync(userToApprove!.OrganizationId ?? Guid.NewGuid(), message);
+        await _notificationService.NotifySuperAdminAsync(message);
+        await _notificationService.NotifyUserAsync(userId, message);
+
+        return Ok(new { message = "User revoked by SuperAdmin.", userToApprove.Id, userToApprove.IsSuperAdminApproved });
+    }
 
 
 
-    [HttpPut("orgowner/approveuser/{userId:guid}")]
+    [HttpPatch("orgowner/approveuser/{userId:guid}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> ApproveByOrgOwner(Guid userId)
     {

@@ -74,6 +74,10 @@ public class AuthController : ControllerBase
                 {
                     return BadRequest("Organizaton Registration Number is required");
                 }
+                if (request.OrganizationName.IsNullOrEmpty())
+                {
+                    return BadRequest("Organization Name is required!");
+                }
                 user = new OrgOwner
                 {
                     Email = request.Email,
@@ -99,7 +103,8 @@ public class AuthController : ControllerBase
                 {
                     IsApproved = false,
                     OwnerId = user.Id, // ✅ now safe
-                    RegistrationNumber = request.RegistrationNumber!
+                    RegistrationNumber = request.RegistrationNumber!,
+                    Name = request.OrganizationName!
                 };
                 org.ShortCode = CodeGeneratorHelper.Base62Encode(org.Id);
 

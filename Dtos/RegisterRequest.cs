@@ -55,6 +55,7 @@ namespace Delivera.DTOs
 
         public string? OrganizationShortCode { get; set; }
         public string? RegistrationNumber { get; set; }
+        public string? OrganizationName { get; set; }
 
 
         // public Guid? OrganizationId { get; set; }
