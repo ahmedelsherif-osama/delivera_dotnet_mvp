@@ -77,6 +77,7 @@ public class AdminActionsController : ControllerBase
         var role = User.FindFirstValue("Role");
         var orgRole = User.FindFirstValue(ClaimTypes.Role);
         var orgId = User.FindFirstValue("OrgId");
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
 
         if (orgRole != OrganizationRole.Owner.ToString())
@@ -88,16 +89,14 @@ public class AdminActionsController : ControllerBase
         {
             return BadRequest("You don't belong to any organization yet!");
         }
-        Console.WriteLine("org id bro " + orgId);
         if (!Guid.TryParse(orgId, out var orgGuid))
         {
             return BadRequest("Invalid organization ID.");
         }
-        Console.WriteLine("org guid bro " + orgGuid);
 
 
 
-        var users = await _context.Users.Where(u => u.OrganizationId == orgGuid).Select(u =>
+        var users = await _context.Users.Where(u => u.OrganizationId == orgGuid && u.Id != userId).Select(u =>
         new
         {
             Id = u.Id,
