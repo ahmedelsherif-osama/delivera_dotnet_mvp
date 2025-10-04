@@ -297,6 +297,48 @@ public class AdminActionsController : ControllerBase
 
         return Ok(new { message = "User approved by OrgOwner.", userToApprove.Id, userToApprove.IsOrgOwnerApproved });
     }
+    [HttpPatch("orgowner/revokeuser/{userId:guid}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> RevokeByOrgOwner(Guid userId)
+    {
+        // 🔑 Verify JWT
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var role = User.FindFirstValue("Role");
+
+        if (callerId == null || role != GlobalRole.OrgUser.ToString())
+            return Forbid("Only OrgUsers (OrgOwner specifically) can approve or revoke users.");
+
+        var orgOwner = await _context.Users.FindAsync(Guid.Parse(callerId));
+        if (orgOwner == null || orgOwner.OrganizationRole != OrganizationRole.Owner)
+            return Forbid("Caller must be an Organization Owner.");
+
+        var userToApprove = await _context.Users.FindAsync(userId);
+        if (userToApprove == null)
+            return NotFound("User not found.");
+
+        if (userToApprove.OrganizationId != orgOwner.OrganizationId)
+            return Forbid("Cannot revoke users outside your organization.");
+
+        if (!userToApprove.IsOrgOwnerApproved)
+            return BadRequest("User is already revoked by OrgOwner.");
+
+        var orgId = userToApprove.OrganizationId;
+        if (orgId == null) return BadRequest("User doesnt belong to any organization!");
+
+        userToApprove.IsOrgOwnerApproved = false;
+        // userToApprove.ApprovedById = orgOwner.Id;
+        // userToApprove.ApprovedAt = DateTime.UtcNow;
+
+
+        await _context.SaveChangesAsync();
+        var message = $"User {userToApprove.Username} #{userId} is revoked by Organization Owner";
+        await _notificationService.NotifyOrganizationOwnerAsync(orgId ?? Guid.Empty, message);
+        await _notificationService.NotifyOrganizationAdminAsync(orgId ?? Guid.Empty, message);
+        await _notificationService.NotifyUserAsync(userId, message);
+
+
+        return Ok(new { message = "User revoked by OrgOwner.", userToApprove.Id, userToApprove.IsOrgOwnerApproved });
+    }
 
 
 
