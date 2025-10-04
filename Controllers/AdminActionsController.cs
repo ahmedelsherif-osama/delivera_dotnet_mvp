@@ -27,19 +27,77 @@ public class AdminActionsController : ControllerBase
         _notificationService = notificationService;
     }
 
-    [HttpGet("users")]
+    [HttpGet("superadmin/users")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> GetUsers()
     {
         var role = User.FindFirstValue("Role");
         var orgRole = User.FindFirstValue(ClaimTypes.Role);
 
-        if (role != GlobalRole.SuperAdmin.ToString() && orgRole != OrganizationRole.Owner.ToString())
+        if (role != GlobalRole.SuperAdmin.ToString())
         {
             return Unauthorized("Admin restricted!");
         }
 
         var users = await _context.Users.Select(u =>
+        new
+        {
+            Id = u.Id,
+            Email = u.Email,
+            Username = u.Username,
+            PhoneNumber = u.PhoneNumber,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            DateOfBirth = u.DateOfBirth,
+            NationalId = u.NationalId,
+            IsOrgOwnerApproved = u.IsOrgOwnerApproved,
+            IsSuperAdminApproved = u.IsSuperAdminApproved,
+            IsActive = u.IsActive,
+            CreatedAt = u.CreatedAt,
+            ApprovedAt = u.ApprovedAt,
+            GlobalRole = u.GlobalRole,
+            OrganizationRole = u.OrganizationRole,
+            CreatedById = u.CreatedById,
+            ApprovedById = u.ApprovedById,
+            OrganizationId = u.OrganizationId
+        }
+        ).ToListAsync();
+
+        if (users.IsNullOrEmpty())
+        {
+            return NotFound("No users were found!");
+        }
+        return Ok(users);
+
+    }
+    [HttpGet("orgowner/users")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetUsersOrgOwner()
+    {
+        var role = User.FindFirstValue("Role");
+        var orgRole = User.FindFirstValue(ClaimTypes.Role);
+        var orgId = User.FindFirstValue("OrgId");
+
+
+        if (orgRole != OrganizationRole.Owner.ToString())
+        {
+            return Unauthorized("Admin restricted!");
+        }
+
+        if (orgId.IsNullOrEmpty())
+        {
+            return BadRequest("You don't belong to any organization yet!");
+        }
+        Console.WriteLine("org id bro " + orgId);
+        if (!Guid.TryParse(orgId, out var orgGuid))
+        {
+            return BadRequest("Invalid organization ID.");
+        }
+        Console.WriteLine("org guid bro " + orgGuid);
+
+
+
+        var users = await _context.Users.Where(u => u.OrganizationId == orgGuid).Select(u =>
         new
         {
             Id = u.Id,
