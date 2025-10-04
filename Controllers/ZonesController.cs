@@ -30,7 +30,7 @@ public class ZonesController : ControllerBase
 
 
     [Authorize]
-    [HttpGet("getzone/{id}")]
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetZone(Guid id)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -57,12 +57,47 @@ public class ZonesController : ControllerBase
 
         return Ok(response);
     }
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetZones()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        var orgId = User.FindFirstValue("OrgId");
+
+
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("Invalid token");
+
+        if (role == OrganizationRole.Rider.ToString() || role == OrganizationRole.Support.ToString())
+            return Unauthorized("This user type cannot access zones");
+
+
+        var zones = await _context.Zones.Select(zone => new
+       ZoneResponse
+        {
+            Id = zone.Id,
+            Name = zone.Name,
+            WktPolygon = zone.Area.AsText()
+
+        }).ToListAsync();
+        // if (zone == null) return NotFound();
+        // var response = new ZoneResponse
+        // {
+        //     Id = zone.Id,
+        //     Name = zone.Name,
+        //     WktPolygon = zone.Area.AsText()
+
+        // };
+
+        return Ok(zones);
+    }
 
 
 
 
     [Authorize]
-    [HttpPost("createzone")]
+    [HttpPost("create")]
     public async Task<IActionResult> CreateZone([FromBody] CreateZoneRequest dto)
     {
         //token check
