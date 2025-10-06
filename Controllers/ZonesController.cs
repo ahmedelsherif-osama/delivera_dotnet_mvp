@@ -73,7 +73,7 @@ public class ZonesController : ControllerBase
             return Unauthorized("This user type cannot access zones");
 
 
-        var zones = await _context.Zones.Select(zone => new
+        var zones = await _context.Zones.Where(zone => zone.OrganizationId == Guid.Parse(orgId!)).Select(zone => new
        ZoneResponse
         {
             Id = zone.Id,
