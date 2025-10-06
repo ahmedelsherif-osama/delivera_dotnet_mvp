@@ -81,17 +81,47 @@ public class ZonesController : ControllerBase
             WktPolygon = zone.Area.AsText()
 
         }).ToListAsync();
-        // if (zone == null) return NotFound();
-        // var response = new ZoneResponse
-        // {
-        //     Id = zone.Id,
-        //     Name = zone.Name,
-        //     WktPolygon = zone.Area.AsText()
 
-        // };
 
         return Ok(zones);
     }
+
+    [Authorize]
+    [HttpDelete("delete/{zoneId}")]
+    public async Task<IActionResult> DeleteZone(Guid zoneId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        var orgId = User.FindFirstValue("OrgId");
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized("Invalid token");
+
+        if (role == OrganizationRole.Rider.ToString() || role == OrganizationRole.Support.ToString())
+            return Unauthorized("This user type cannot access zones");
+
+        if (string.IsNullOrEmpty(orgId))
+            return BadRequest("OrganizationId missing");
+
+        var org = await _context.Organizations
+            .FirstOrDefaultAsync(o => o.Id == Guid.Parse(orgId));
+
+        if (org == null)
+            return BadRequest("You don't belong to any organization!");
+
+        var zone = await _context.Zones
+            .FirstOrDefaultAsync(z => z.OrganizationId == Guid.Parse(orgId) && z.Id == zoneId);
+
+        if (zone == null)
+            return NotFound("Zone not found");
+
+        _context.Zones.Remove(zone);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Zone deleted successfully" });
+    }
+
 
 
 
