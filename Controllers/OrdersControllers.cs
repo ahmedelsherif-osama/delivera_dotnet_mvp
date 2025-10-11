@@ -224,7 +224,25 @@ public class OrdersController : ControllerBase
             throw;
         }
 
-        return Ok(new { message = "Order created successfully!" });
+        return Created(string.Empty, new
+        {
+            order.Id,
+            order.OrganizationId,
+
+            order.RiderId,
+            order.Status,
+            order.PickUpLocation,
+            order.DropOffLocation,
+            order.CreatedAt,
+            order.UpdatedAt,
+            order.OrderDetails,
+
+            order.RiderSessionId,
+
+            order.CreatedById,
+        }
+
+      );
 
 
     }
