@@ -290,10 +290,7 @@ public class AuthController : ControllerBase
             RefreshToken = refreshToken,
             ExpiresIn = 3 * 60 * 60, // 3 hours in seconds
             message = "Login successful",
-            user.Id,
-            user.Username,
-            user.GlobalRole,
-            user.OrganizationRole
+            user
         });
 
 
