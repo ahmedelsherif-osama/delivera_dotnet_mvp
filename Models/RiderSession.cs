@@ -10,8 +10,11 @@ namespace Delivera.Models
         public Zone? Zone { get; set; }
 
         public Guid RiderId { get; set; }
+        public string RiderName { get; set; } = String.Empty;
         public SessionStatus Status { get; set; } = SessionStatus.Active;
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
+
+        public Guid OrganizationId { get; set; }
 
 
         public ICollection<Order> ActiveOrders { get; set; } = new List<Order>();

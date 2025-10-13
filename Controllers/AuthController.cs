@@ -275,9 +275,12 @@ public class AuthController : ControllerBase
         // after validating user
         if (user.OrganizationRole == OrganizationRole.Rider)
         {
+
             var session = new RiderSession
             {
-                RiderId = user.Id
+                RiderId = user.Id,
+                RiderName = $"{user.FirstName} {user.LastName}",
+                OrganizationId = user.OrganizationId ?? Guid.Empty
             };
             _context.RiderSessions.Add(session);
             await _context.SaveChangesAsync();

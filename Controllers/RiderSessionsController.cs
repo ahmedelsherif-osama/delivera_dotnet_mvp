@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Delivera.Controllers;
 
@@ -26,6 +27,28 @@ public class RiderSessionsController : ControllerBase
         _notificationService = notificationService;
 
     }
+
+    [HttpGet("all")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetOrganizationsActiveRiderSessions()
+    {
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        if (role == OrganizationRole.Rider.ToString())
+        {
+            return Unauthorized();
+        }
+
+        var userOrgId = User.FindFirstValue("OrgId");
+        var sessions = await _context.RiderSessions.Where((s) => s.Status == SessionStatus.Active && s.OrganizationId == Guid.Parse(userOrgId!)).ToListAsync();
+
+        if (sessions.IsNullOrEmpty())
+        {
+            return Ok("No active sessions for your organization!");
+        }
+
+        return Ok(sessions);
+    }
+
 
     [HttpPut("endridersession/{sessionId}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -114,8 +137,14 @@ public class RiderSessionsController : ControllerBase
 
     public RiderSession? GetNearestActiveRider(double latitude, double longitude, Guid zoneId)
     {
-        var sessions = _context.RiderSessions.Where(s => s.ZoneId == zoneId).ToList<RiderSession>();
-
+        var sessions = _context.RiderSessions.Where(s => s.ZoneId == zoneId && s.Status == SessionStatus.Active).ToList<RiderSession>();
+        sessions.ForEach((s) => Console.WriteLine(s.Id + " here we go"));
+        Console.WriteLine(sessions.IsNullOrEmpty());
+        if (sessions.IsNullOrEmpty())
+        {
+            Console.WriteLine("no sessions");
+            return null;
+        }
         return sessions
             .OrderBy(s => Distance(latitude, longitude, s.Latitude, s.Longitude))
             .FirstOrDefault();
@@ -139,7 +168,7 @@ public class RiderSessionsController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("assignrider")]
+    [HttpPatch("assignrider")]
     public async Task<ActionResult> AssignRider(Guid orderId)
     {
         Console.WriteLine("within assign rider");
@@ -149,6 +178,11 @@ public class RiderSessionsController : ControllerBase
         if (order == null) return NotFound(new { error = "Order not found" });
         if (order.PickUpLocation == null)
             return BadRequest("Order has no pickup location");
+        if (order.Status != OrderStatus.Created)
+        {
+
+            return BadRequest(new { message = $"Order already {order.Status.ToString().Replace("OrderStatus", "")}!" });
+        }
 
         // ✅ 2. Check user permissions
         var role = User.FindFirstValue(ClaimTypes.Role);
@@ -182,7 +216,9 @@ public class RiderSessionsController : ControllerBase
 
         if (zone == null)
         {
-            return NotFound(new { error = "Pickup location not in any zone" });
+            Console.WriteLine("No Zone");
+
+            return NotFound(new { message = "Pickup location not in any zone" });
         }
         Console.WriteLine("Zone found");
         // ...
@@ -199,8 +235,12 @@ public class RiderSessionsController : ControllerBase
             zone.Id
         );
 
+        Console.WriteLine($"rider {rider}");
+
         if (rider == null)
-            return Ok(new { message = "No active rider available in this zone" });
+        {
+            return NotFound(new { message = "No active rider available in this zone" });
+        }
 
         // ✅ 5. Update order + rider
         order.Status = OrderStatus.Assigned;
