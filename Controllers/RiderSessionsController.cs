@@ -167,8 +167,9 @@ public class RiderSessionsController : ControllerBase
         return R * c;
     }
 
-    [Authorize]
     [HttpPatch("assignrider")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
     public async Task<ActionResult> AssignRider(Guid orderId)
     {
         Console.WriteLine("within assign rider");
@@ -186,8 +187,7 @@ public class RiderSessionsController : ControllerBase
 
         // ✅ 2. Check user permissions
         var role = User.FindFirstValue(ClaimTypes.Role);
-        if (role != OrganizationRole.Owner.ToString() &&
-            role != OrganizationRole.Admin.ToString())
+        if (role == OrganizationRole.Rider.ToString())
         {
             return Forbid("Only admins or owners can assign riders");
         }
