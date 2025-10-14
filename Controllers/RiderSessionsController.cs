@@ -320,5 +320,49 @@ public class RiderSessionsController : ControllerBase
         });
     }
 
+    [HttpGet("admin/riders")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<ActionResult> GetAllRiders()
+    {
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        if (role == OrganizationRole.Rider.ToString() || role == OrganizationRole.Support.ToString())
+        {
+            return Unauthorized();
+        }
+        var userOrgId = User.FindFirstValue("OrgId");
+        if (userOrgId.IsNullOrEmpty())
+        {
+            return BadRequest(new { message = "You do not belong to any organization! Contact admin." });
+        }
+        var sessions = await _context.RiderSessions.Where(s => s.OrganizationId == Guid.Parse(userOrgId!) && s.Status != SessionStatus.Completed).ToListAsync();
+        if (sessions.IsNullOrEmpty())
+        {
+            sessions = new List<RiderSession> { };
+        }
+        var activeSessions = sessions.Where(s => s.Status == SessionStatus.Active);
+        var onBreakSessions = sessions.Where(s => s.Status == SessionStatus.OnBreak);
+        var riders = await _context.Users.Where(u => u.OrganizationRole == OrganizationRole.Rider && u.OrganizationId == Guid.Parse(userOrgId!)).ToListAsync();
+        if (riders.IsNullOrEmpty())
+        {
+            riders = new List<BaseUser> { };
+        }
+        var inSessionRidersIds = sessions.Select(s => s.RiderId).Distinct().ToHashSet();
+        var offlineRiders = riders.Where(r => !inSessionRidersIds.Contains(r.Id)).ToList();
+
+        return Ok(
+            new
+            {
+                activeRiderSessions = activeSessions,
+                onBreakRiderSessions = onBreakSessions,
+                offlineRiders = offlineRiders
+
+            }
+        );
+
+
+
+
+    }
+
 
 }
