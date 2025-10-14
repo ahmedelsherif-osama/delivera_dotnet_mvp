@@ -122,7 +122,7 @@ public class RiderSessionsController : ControllerBase
 
         if (zone == null)
         {
-            return BadRequest("Rider our of zone!");
+            return BadRequest(new { message = "Rider out of zone!" });
         }
 
         session.Latitude = req.Latitude;
@@ -261,7 +261,7 @@ public class RiderSessionsController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("admin/assignrider")]
+    [HttpPatch("admin/assignrider")]
     public async Task<ActionResult> AssignRiderAdmin(Guid orderId, [FromBody] AssignRiderRequest assignRiderRequest)
     {
         Console.WriteLine("within assign rider");
@@ -293,7 +293,7 @@ public class RiderSessionsController : ControllerBase
 
 
         var rider = await _context.Users.FirstOrDefaultAsync(u => u.Id == riderId);
-        if (rider == null) return BadRequest("Rider not found!");
+        if (rider == null) return BadRequest(new { message = "Rider ID not found, contact admin!" });
 
 
         if (Guid.Parse(orgId) != rider.OrganizationId) return Unauthorized("This rider does not belong to your organization!");
