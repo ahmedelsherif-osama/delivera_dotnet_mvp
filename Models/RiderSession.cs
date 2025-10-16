@@ -16,8 +16,12 @@ namespace Delivera.Models
 
         public Guid OrganizationId { get; set; }
 
+        public Guid? CurrentOrderId { get; set; }
+        public Location? CurrentOrderPickUp { get; set; }
+        public Location? CurrentOrderDropOff { get; set; }
 
-        public ICollection<Order> ActiveOrders { get; set; } = new List<Order>();
+
+
     }
     public enum SessionStatus
     {
