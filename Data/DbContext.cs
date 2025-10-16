@@ -85,11 +85,15 @@ namespace Delivera.Data
    );
 
             modelBuilder.Entity<RiderSession>().HasOne(s => s.Zone).WithMany().HasForeignKey(s => s.ZoneId).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<Order>()
-    .HasOne<RiderSession>()
-    .WithMany(rs => rs.ActiveOrders)
-    .HasForeignKey(o => o.RiderSessionId)
-    .OnDelete(DeleteBehavior.SetNull);
+            // For Order
+            modelBuilder.Entity<Order>().OwnsOne(o => o.PickUpLocation);
+            modelBuilder.Entity<Order>().OwnsOne(o => o.DropOffLocation);
+
+            // For RiderSession (the new part!)
+            modelBuilder.Entity<RiderSession>().OwnsOne(rs => rs.CurrentOrderPickUp);
+            modelBuilder.Entity<RiderSession>().OwnsOne(rs => rs.CurrentOrderDropOff);
+
+
 
 
 
