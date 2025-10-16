@@ -3,6 +3,7 @@ using System;
 using Delivera.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Delivera.Migrations
 {
     [DbContext(typeof(DeliveraDbContext))]
-    partial class DeliveraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251014231125_UpdateOrderSessionRelation")]
+    partial class UpdateOrderSessionRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.19");
@@ -261,9 +264,6 @@ namespace Delivera.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("CurrentOrderId")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("TEXT");
 
@@ -397,8 +397,9 @@ namespace Delivera.Migrations
                         .IsRequired();
 
                     b.HasOne("Delivera.Models.RiderSession", "RiderSession")
-                        .WithMany()
-                        .HasForeignKey("RiderSessionId");
+                        .WithMany("ActiveOrders")
+                        .HasForeignKey("RiderSessionId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.OwnsOne("Delivera.Models.Location", "DropOffLocation", b1 =>
                         {
@@ -492,62 +493,6 @@ namespace Delivera.Migrations
                         .HasForeignKey("ZoneId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("Delivera.Models.Location", "CurrentOrderDropOff", b1 =>
-                        {
-                            b1.Property<Guid>("RiderSessionId")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Address")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<double>("Latitude")
-                                .HasColumnType("REAL");
-
-                            b1.Property<double>("Longitude")
-                                .HasColumnType("REAL");
-
-                            b1.Property<DateTime>("Timestamp")
-                                .HasColumnType("TEXT");
-
-                            b1.HasKey("RiderSessionId");
-
-                            b1.ToTable("RiderSessions");
-
-                            b1.WithOwner()
-                                .HasForeignKey("RiderSessionId");
-                        });
-
-                    b.OwnsOne("Delivera.Models.Location", "CurrentOrderPickUp", b1 =>
-                        {
-                            b1.Property<Guid>("RiderSessionId")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Address")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<double>("Latitude")
-                                .HasColumnType("REAL");
-
-                            b1.Property<double>("Longitude")
-                                .HasColumnType("REAL");
-
-                            b1.Property<DateTime>("Timestamp")
-                                .HasColumnType("TEXT");
-
-                            b1.HasKey("RiderSessionId");
-
-                            b1.ToTable("RiderSessions");
-
-                            b1.WithOwner()
-                                .HasForeignKey("RiderSessionId");
-                        });
-
-                    b.Navigation("CurrentOrderDropOff");
-
-                    b.Navigation("CurrentOrderPickUp");
-
                     b.Navigation("Zone");
                 });
 
@@ -576,6 +521,11 @@ namespace Delivera.Migrations
             modelBuilder.Entity("Delivera.Models.Organization", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Delivera.Models.RiderSession", b =>
+                {
+                    b.Navigation("ActiveOrders");
                 });
 #pragma warning restore 612, 618
         }
