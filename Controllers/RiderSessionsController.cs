@@ -229,34 +229,39 @@ public class RiderSessionsController : ControllerBase
         Console.WriteLine(order.PickUpLocation.Longitude);
         Console.WriteLine(zone!.Name);
         // ✅ 4. Find nearest rider in that zone
-        var rider = GetNearestActiveRider(
+        var riderSession = GetNearestActiveRider(
             order.PickUpLocation.Latitude,
             order.PickUpLocation.Longitude,
             zone.Id
         );
 
-        Console.WriteLine($"rider {rider}");
+        Console.WriteLine($"rider {riderSession}");
 
-        if (rider == null)
+        if (riderSession == null)
         {
             return NotFound(new { message = "No active rider available in this zone" });
         }
 
+
+
         // ✅ 5. Update order + rider
         order.Status = OrderStatus.Assigned;
-        order.RiderId = rider.RiderId; // 🔴 for MVP only, better to store RiderId as Guid
-        rider.ActiveOrders.Add(order);
+        order.RiderId = riderSession.RiderId; // 🔴 for MVP only, better to store RiderId as Guid
+        order.RiderSessionId = riderSession.Id;
+        riderSession.CurrentOrderId = order.Id;
+        riderSession.CurrentOrderPickUp = order.PickUpLocation;
+        riderSession.CurrentOrderDropOff = order.DropOffLocation;
 
         _context.SaveChanges();
 
-        var message = $"Order #{order.Id} assigned to rider #{rider.Id}";
-        await _notificationService.NotifyRiderAsync(rider.RiderId, message);
+        var message = $"Order #{order.Id} assigned to rider #{riderSession.Id}";
+        await _notificationService.NotifyRiderAsync(riderSession.RiderId, message);
         await _notificationService.NotifyOrderCreatorAsync(order, message);
 
         return Ok(new
         {
             message = "Rider assigned",
-            riderId = rider.RiderId
+            riderId = riderSession.RiderId
         });
     }
 
@@ -301,7 +306,9 @@ public class RiderSessionsController : ControllerBase
         var riderSession = await _context.RiderSessions.FirstOrDefaultAsync(s => s.RiderId == riderId && s.Status != SessionStatus.Completed);
         if (riderSession == null) return BadRequest("Rider is not logged in! Please ask the rider to login first!");
 
-
+        riderSession.CurrentOrderId = orderId;
+        riderSession.CurrentOrderPickUp = order.PickUpLocation;
+        riderSession.CurrentOrderDropOff = order.DropOffLocation;
 
         order.RiderId = riderId;
         order.RiderSessionId = riderSession.Id;
@@ -339,7 +346,8 @@ public class RiderSessionsController : ControllerBase
         {
             sessions = new List<RiderSession> { };
         }
-        var activeSessions = sessions.Where(s => s.Status == SessionStatus.Active);
+        var activeSessions = sessions.Where(s => s.Status == SessionStatus.Active);                // eager load orders;
+
         var onBreakSessions = sessions.Where(s => s.Status == SessionStatus.OnBreak);
         var riders = await _context.Users.Where(u => u.OrganizationRole == OrganizationRole.Rider && u.OrganizationId == Guid.Parse(userOrgId!)).ToListAsync();
         if (riders.IsNullOrEmpty())
