@@ -52,6 +52,46 @@ public class OrdersController : ControllerBase
         return Ok(orders);
     }
 
+    [HttpGet("rider/all/{riderId}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetAllRiderOrders(Guid riderId)
+    {
+        var orgId = User.FindFirstValue("OrgId");
+
+        if (!Guid.TryParse(orgId, out var orgGuid))
+        {
+            return BadRequest(new { message = "Organization Id is in wrong format!" });
+        }
+        var orders = await _context.Orders.Where(o => o.OrganizationId == orgGuid && o.RiderId == riderId).ToListAsync();
+
+        if (orders.IsNullOrEmpty())
+        {
+            orders = [];
+        }
+
+        return Ok(orders);
+    }
+
+    [HttpGet("rider/today/{riderId}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetRiderOrdersToday(Guid riderId)
+    {
+        var orgId = User.FindFirstValue("OrgId");
+
+        if (!Guid.TryParse(orgId, out var orgGuid))
+        {
+            return BadRequest(new { message = "Organization Id is in wrong format!" });
+        }
+        var orders = await _context.Orders.Where(o => o.OrganizationId == orgGuid && o.RiderId == riderId && o.CreatedAt.Date == DateTime.Today).ToListAsync();
+
+        if (orders.IsNullOrEmpty())
+        {
+            return Ok("No orders for today!");
+        }
+
+        return Ok(orders);
+    }
+
     [HttpGet("superadmin")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> GetAllOrdersAdmin()
