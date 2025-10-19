@@ -52,6 +52,33 @@ public class OrdersController : ControllerBase
         return Ok(orders);
     }
 
+    [HttpGet("rider/currentorder")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetRiderCurrentOrder()
+    {
+        var orgId = User.FindFirstValue("OrgId");
+        var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier)!.ToUpper();
+        Console.WriteLine("rider id " + riderId);
+
+        if (!Guid.TryParse(orgId, out var orgGuid))
+        {
+            return BadRequest(new { message = "Organization Id is in wrong format!" });
+        }
+
+        var orders = await _context.Orders.Where(o => o.RiderId == Guid.Parse(riderId!) && (o.Status == OrderStatus.Assigned || o.Status == OrderStatus.PickedUp)).ToListAsync();
+        Console.WriteLine("orders " + orders);
+
+
+        if (orders.IsNullOrEmpty())
+        {
+            return NotFound(new { message = "You have no orders right now!" });
+        }
+        var currentorder = orders.First();
+        Console.WriteLine("current order " + currentorder);
+
+
+        return Ok(currentorder);
+    }
     [HttpGet("rider/all/{riderId}")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> GetAllRiderOrders(Guid riderId)
