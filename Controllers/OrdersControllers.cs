@@ -198,7 +198,7 @@ public class OrdersController : ControllerBase
         }
 
         order.Status = updateStatusRequest.Status;
-        var message = $"Order {order.Id} {updateStatusRequest.Status}";
+        var message = $"Order {order.Id.ToString().Substring(0, 8)} {updateStatusRequest.Status}";
         if (order.RiderId == null || order.RiderId.ToString() == "")
         {
             return BadRequest("Order must be assigned to a rider before status update");
@@ -280,7 +280,7 @@ public class OrdersController : ControllerBase
         try
         {
             await _context.SaveChangesAsync();
-            var message = $"New order #{order.Id} created for Organization #{orgId}";
+            var message = $"New order #{order.Id.ToString().Substring(0, 8)} created for Organization #{orgId.ToString().Substring(0, 8)}";
             await _notificationService.NotifyOrderCreatorAsync(order, message);
             await _notificationService.NotifyOrganizationOwnerAsync(Guid.Parse(orgId), message);
             await _notificationService.NotifyOrganizationAdminAsync(Guid.Parse(orgId), message);

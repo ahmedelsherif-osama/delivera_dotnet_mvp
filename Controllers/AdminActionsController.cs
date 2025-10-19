@@ -183,7 +183,7 @@ public class AdminActionsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        var message = $"Organization #{org.Id} {org.Name} is now approved";
+        var message = $"Organization #{org.Id.ToString().Substring(0, 8)} {org.Name} is now approved";
         await _notificationService.NotifyOrganizationOwnerAsync(org.Id, message);
         await _notificationService.NotifySuperAdminAsync(message);
 
@@ -224,7 +224,7 @@ public class AdminActionsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        var message = $"Organization #{org.Id} {org.Name} approval is now revoked!";
+        var message = $"Organization #{org.Id.ToString().Substring(0, 8)} {org.Name} approval is now revoked!";
         await _notificationService.NotifyOrganizationOwnerAsync(org.Id, message);
         await _notificationService.NotifySuperAdminAsync(message);
 
@@ -263,7 +263,7 @@ public class AdminActionsController : ControllerBase
         userToApprove.ApprovedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
-        var message = $"User {userToApprove.Username} #{userId} is approved by superadmin";
+        var message = $"User {userToApprove.Username} #{userId.ToString().Substring(0, 8)} is approved by superadmin";
         if (userToApprove.OrganizationId == null || userToApprove.OrganizationId == Guid.Empty) return BadRequest("User is not part of any organization!");
         await _notificationService.NotifyOrganizationOwnerAsync(userToApprove!.OrganizationId ?? Guid.NewGuid(), message);
         await _notificationService.NotifyOrganizationAdminAsync(userToApprove!.OrganizationId ?? Guid.NewGuid(), message);
@@ -302,7 +302,7 @@ public class AdminActionsController : ControllerBase
         // userToApprove.ApprovedAt = DateTime.em;
 
         await _context.SaveChangesAsync();
-        var message = $"User {userToApprove.Username} #{userId} is revoked by superadmin";
+        var message = $"User {userToApprove.Username} #{userId.ToString().Substring(0, 8)} is revoked by superadmin";
         if (userToApprove.OrganizationId == null || userToApprove.OrganizationId == Guid.Empty) return BadRequest("User is not part of any organization!");
         await _notificationService.NotifyOrganizationOwnerAsync(userToApprove!.OrganizationId ?? Guid.NewGuid(), message);
         await _notificationService.NotifyOrganizationAdminAsync(userToApprove!.OrganizationId ?? Guid.NewGuid(), message);
@@ -346,7 +346,7 @@ public class AdminActionsController : ControllerBase
         if (orgId == null) return BadRequest("User doesnt belong to any organization!");
 
         await _context.SaveChangesAsync();
-        var message = $"User {userToApprove.Username} #{userId} is approved by Organization Owner";
+        var message = $"User {userToApprove.Username} #{userId.ToString().Substring(0, 8)} is approved by Organization Owner";
         await _notificationService.NotifyOrganizationOwnerAsync(orgId ?? Guid.Empty, message);
         await _notificationService.NotifyOrganizationAdminAsync(orgId ?? Guid.Empty, message);
         await _notificationService.NotifyUserAsync(userId, message);
@@ -388,7 +388,7 @@ public class AdminActionsController : ControllerBase
 
 
         await _context.SaveChangesAsync();
-        var message = $"User {userToApprove.Username} #{userId} is revoked by Organization Owner";
+        var message = $"User {userToApprove.Username} #{userId.ToString().Substring(0, 8)} is revoked by Organization Owner";
         await _notificationService.NotifyOrganizationOwnerAsync(orgId ?? Guid.Empty, message);
         await _notificationService.NotifyOrganizationAdminAsync(orgId ?? Guid.Empty, message);
         await _notificationService.NotifyUserAsync(userId, message);

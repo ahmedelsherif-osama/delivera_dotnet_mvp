@@ -181,7 +181,7 @@ public class ZonesController : ControllerBase
             Name = zone.Name,
             WktPolygon = zone.Area.AsText()
         };
-        var message = $"New Zone #{zone.Id} {zone.Name} created for Organization #{orgId} {org.Name}";
+        var message = $"New Zone #{zone.Id.ToString().Substring(0, 8)} {zone.Name} created for Organization #{orgId.ToString().Substring(0, 8)} {org.Name}";
         await _notificationService.NotifyOrganizationOwnerAsync(Guid.Parse(orgId), message);
         await _notificationService.NotifyOrganizationAdminAsync(Guid.Parse(orgId), message);
 

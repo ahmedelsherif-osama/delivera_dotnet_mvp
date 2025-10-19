@@ -82,7 +82,7 @@ public class RiderSessionsController : ControllerBase
         var totalSeconds = totalSessionDuration.TotalSeconds;
 
         await _context.SaveChangesAsync();
-        var message = $"Session #{sessionId} for rider {rider.FirstName + " " + rider.LastName} is completed at {session.LastUpdated.Humanize()}  total duration is {totalHours} hours";
+        var message = $"Session #{sessionId.ToString().Substring(0, 8)} for rider {rider.FirstName + " " + rider.LastName} is completed at {session.LastUpdated.Humanize()}  total duration is {totalHours} hours";
 
         await _notificationService.NotifyOrganizationAdminAsync(Guid.Parse(userOrgId), message);
         await _notificationService.NotifyRiderAsync(rider.Id, message);
@@ -254,7 +254,7 @@ public class RiderSessionsController : ControllerBase
 
         _context.SaveChanges();
 
-        var message = $"Order #{order.Id} assigned to rider #{riderSession.Id}";
+        var message = $"Order #{order.Id.ToString().Substring(0, 8)} assigned to rider #{riderSession.Id.ToString().Substring(0, 8)}";
         await _notificationService.NotifyRiderAsync(riderSession.RiderId, message);
         await _notificationService.NotifyOrderCreatorAsync(order, message);
 
@@ -318,7 +318,7 @@ public class RiderSessionsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        var message = $"Order #{order.Id} assigned to rider #{riderId}";
+        var message = $"Order #{order.Id.ToString().Substring(0, 8)} assigned to rider #{riderId.ToString().Substring(0, 8)}";
         await _notificationService.NotifyRiderAsync(riderId, message);
         await _notificationService.NotifyOrderCreatorAsync(order, message);
 
