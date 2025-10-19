@@ -33,6 +33,7 @@ namespace Delivera.Models
     {
         Created,
         Assigned,
+        PickedUp,
         Delivered,
         Canceled
     }
