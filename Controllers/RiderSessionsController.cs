@@ -313,6 +313,8 @@ public class RiderSessionsController : ControllerBase
         order.RiderId = riderId;
         order.RiderSessionId = riderSession.Id;
         order.RiderSession = riderSession;
+        order.Status = OrderStatus.Assigned;
+
 
         await _context.SaveChangesAsync();
 
